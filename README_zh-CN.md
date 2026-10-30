@@ -122,8 +122,7 @@ flowchart TD
     end
 
     subgraph RemoteEndpoints["远端服务端点 (可选)"]
-        WSServer["wss://ws.captcharaptor.com<br/>(分布式打码任务分发中控)"]
-        TelemetryServer["https://captcharaptor.com/upload.php<br/>(模型训练集遥测收集接口)"]
+        WSServer["远程 WebSocket 服务端<br/>(分布式打码任务分发中控)"]
         GoogleServers["*.google.com/recaptcha/*<br/>(Google 验证码官方服务)"]
     end
 
@@ -136,8 +135,6 @@ flowchart TD
     SQL --> SQLiteFile
     BG --> IDB
     BG --> SyncStorage
-    Uploader --> IDB
-    Uploader -.->|批量分块 NDJSON| TelemetryServer
     WS_Client <-->|内部 RPC 通信| WS_BG
     WS_Client <-->|WSS 连接| WSServer
     WS_BG <-->|CDP 1.3 Debugger| MainWorld
@@ -236,7 +233,7 @@ sequenceDiagram
 ## 项目目录结构
 
 ```text
-captchaplugin-main/
+MaiRec/
 ├── .gitignore                      # Git 忽略配置（包含环境文件、IDE 与构建缓存）
 ├── LICENSE                         # MIT 开源许可证
 ├── README.md                       # 英文核心文档
@@ -406,7 +403,7 @@ captchaplugin-main/
 
 在开启 **WS 插件模式** 后，MaiRec 将转变为高效率的受控打码工作节点：
 
-1. **长连接保活机制**：通过离屏文档（`ws/offscreen.html`）与调度服务端建立稳定 WebSocket 通信（`wss://ws.captcharaptor.com`），绕过 MV3 后台 Service Worker 容易被系统自动挂起的限制。
+1. **长连接保活机制**：通过离屏文档（`ws/offscreen.html`）与调度中心建立稳定 WebSocket 通信，绕过 MV3 后台 Service Worker 容易被系统自动挂起的限制。
 2. **事件循环健康度监控**：实时追踪浏览器主线程的事件循环漂移（P50、P95、P99 延迟指标），将负载画像随心跳回传给调度中心，确保任务被派发至响应迅速的健康实例。
 3. **CDP 深度接管与请求沙箱化**：
    - 收到打码任务（`{ url, sitekey }`）后，通过 `chrome.tabs.create` 创建受控空白标签页。
@@ -435,16 +432,15 @@ MaiRec 内置了 `declarativeNetRequest` 网络规则，会自动在验证码框
 
 ---
 
-## 隐私与数据遥测披露
+## 隐私与数据安全披露
 
 MaiRec 尊重用户隐私并保持高度透明：
 
 - **纯本地推理**：所有验证码图像切分、感知哈希检索与神经网络推理均 100% 在您的本地设备 CPU 上运行。**绝不会为了求解验证码而将图片传输至任何外部服务器。**
-- **可选样本遥测**：
-  - 扩展内包含一个可选的数据上报模块（`uploader.js`），用于为开源模型迭代训练收集样本。
-  - 启用后，扩展在求解过程中会将脱敏的挑战切片、选取的方格序号以及最终验证结果（`tokenOk`）保存在浏览器本地 IndexedDB（`caplog`）中。
-  - 在浏览器处于空闲态时，这些数据会以分块 NDJSON 格式上传至训练接口 `captcharaptor.com`。
-  - **自主掌控**：您可以在弹窗界面的 **Reports** 菜单中随时开启或彻底关闭该上报功能。扩展绝不会采集任何个人身份信息（PII）、浏览历史记录、Cookies 或账号密码。
+- **隐私保护强化**：
+  - 为保障用户隐私与数据安全，远端遥测数据上传已完全禁用，杜绝任何云端数据泄露隐患。
+  - 扩展绝不会采集任何个人身份信息（PII）、浏览历史记录、Cookies 或账号密码。
+  - 本地哈希数据库与 AI 运行环境完全限定在浏览器沙箱内运行。
 
 ---
 

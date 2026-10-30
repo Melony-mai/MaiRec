@@ -2,24 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-i18n="reports_title">Reports</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <section class="card">
-    <h2 data-i18n="reports_title">Reports</h2>
-    <hr class="divider">
-    <div class="reports-grid">
-      <span data-i18n="enable_reports">Enable reports (disabled)</span>
-      <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
+  <div id="page_reports">
+    <header class="header">
+      <div class="brand">
+        <h1 data-i18n="reports_title">Reports</h1>
+      </div>
+    </header>
 
-      <span id="rep_key_label" data-i18n="rep_key_label_16_32">API key (16 or 32 chars)</span>
-      <input type="text" id="rep_key" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456">
+    <section class="settings-group">
+      <div class="card">
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="enable_reports">Enable reports (disabled)</span>
+          <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
+        </div>
 
-      <button id="rep_send" class="btn full" data-i18n="btn_send_reports">Send reports</button>
-      <span id="rep_status" class="small status full"></span>
-    </div>
-  </section>
+        <div class="setting-row-block">
+          <label class="setting-label" id="rep_key_label" data-i18n="rep_key_label_16_32">API key (16 or 32 chars)</label>
+          <input type="text" id="rep_key" class="mac-input" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456" spellcheck="false" autocomplete="off">
+        </div>
+
+        <div class="setting-row-action">
+          <button id="rep_send" class="btn btn-secondary btn-full" data-i18n="btn_send_reports">Send reports</button>
+          <div id="rep_status" class="status-message"></div>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <script type="module" src="reports.js"></script>
 </body>

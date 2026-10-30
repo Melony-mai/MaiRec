@@ -122,8 +122,7 @@ flowchart TD
     end
 
     subgraph RemoteEndpoints["Remote Infrastructure (Optional)"]
-        WSServer["wss://ws.captcharaptor.com<br/>(Task Distribution Server)"]
-        TelemetryServer["https://captcharaptor.com/upload.php<br/>(Model Training Telemetry)"]
+        WSServer["Remote WebSocket Server<br/>(Task Distribution Server)"]
         GoogleServers["*.google.com/recaptcha/*<br/>(Official reCAPTCHA API)"]
     end
 
@@ -136,8 +135,6 @@ flowchart TD
     SQL --> SQLiteFile
     BG --> IDB
     BG --> SyncStorage
-    Uploader --> IDB
-    Uploader -.->|Batch NDJSON| TelemetryServer
     WS_Client <-->|Internal RPC| WS_BG
     WS_Client <-->|WSS Connection| WSServer
     WS_BG <-->|CDP 1.3 Debugger| MainWorld
@@ -237,7 +234,7 @@ sequenceDiagram
 ## Project Directory Structure
 
 ```text
-captchaplugin-main/
+MaiRec/
 ├── .gitignore                      # Git exclusion rules for builds, IDEs, and temp files
 ├── LICENSE                         # MIT License
 ├── README.md                       # English documentation
@@ -408,7 +405,7 @@ This section groups remote worker connectivity with reporting and timing configu
 
 When running in **WS Addon** mode, MaiRec operates as a dedicated solving worker:
 
-1. **Persistent Connection**: An offscreen document (`ws/offscreen.html`) establishes a secure WebSocket connection (`wss://ws.captcharaptor.com`) that remains active even when the Service Worker enters sleep mode.
+1. **Persistent Connection**: An offscreen document (`ws/offscreen.html`) establishes a secure WebSocket connection to your dispatch server that remains active even when the Service Worker enters sleep mode.
 2. **Performance Telemetry**: The worker continuously measures event loop drift (P50, P95, P99 latency) and reports browser health to the dispatcher, ensuring tasks are routed only to responsive nodes.
 3. **CDP Interception**:
    - Upon receiving a task (`{ url, sitekey }`), a controlled browser tab is created.
@@ -441,12 +438,11 @@ Yes. The computer vision models and SQLite perceptual hash database are stored l
 
 MaiRec is committed to transparent data handling:
 
-- **Local Inference**: All image processing, neural network inferences, and perceptual hash lookups occur 100% locally on your device CPU via WebAssembly. **No captcha images are sent to external servers for the purpose of solving.**
-- **Telemetry Data Collection**:
-  - The extension contains an optional telemetry collector (`uploader.js`) designed to build open training datasets for future model improvements.
-  - When enabled, anonymized challenge images, selected tile indexes, and the final verification outcome (`tokenOk`) are stored in browser IndexedDB (`caplog`).
-  - Periodically, when the browser is idle, these logs are packed into NDJSON batches and submitted to `captcharaptor.com`.
-  - **Telemetry Control**: Telemetry can be toggled on or off via the **Reports** section of the extension popup. No personally identifiable information (PII), browsing history, cookies, or account credentials are ever logged.
+- **Local Inference**: All image processing, neural network inferences, and perceptual hash lookups occur 100% locally on your device CPU via WebAssembly. **No captcha images are sent to external servers for solving.**
+- **Privacy Enforcement**:
+  - Remote telemetry data uploads are permanently disabled to ensure complete user privacy and eliminate cloud leakage.
+  - No personally identifiable information (PII), browsing history, cookies, or account credentials are ever collected or transmitted.
+  - The local database and models operate entirely within the browser sandbox.
 
 ---
 

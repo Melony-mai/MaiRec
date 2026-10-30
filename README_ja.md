@@ -122,8 +122,7 @@ flowchart TD
     end
 
     subgraph RemoteEndpoints["リモートエンドポイント (任意)"]
-        WSServer["wss://ws.captcharaptor.com<br/>(分散タスクディスパッチャ)"]
-        TelemetryServer["https://captcharaptor.com/upload.php<br/>(モデル学習データ収集エンドポイント)"]
+        WSServer["リモート WebSocket サーバー<br/>(分散タスクディスパッチャ)"]
         GoogleServers["*.google.com/recaptcha/*<br/>(Google reCAPTCHA 公式サービス)"]
     end
 
@@ -136,8 +135,6 @@ flowchart TD
     SQL --> SQLiteFile
     BG --> IDB
     BG --> SyncStorage
-    Uploader --> IDB
-    Uploader -.->|NDJSON バッチ転送| TelemetryServer
     WS_Client <-->|内部 RPC 通信| WS_BG
     WS_Client <-->|WSS 接続| WSServer
     WS_BG <-->|CDP 1.3 Debugger| MainWorld
@@ -236,7 +233,7 @@ sequenceDiagram
 ## プロジェクト構成
 
 ```text
-captchaplugin-main/
+MaiRec/
 ├── .gitignore                      # Git 除外設定（環境設定、IDE、ビルド成果物）
 ├── LICENSE                         # MIT ライセンス
 ├── README.md                       # 英語ドキュメント（メイン）
@@ -406,7 +403,7 @@ captchaplugin-main/
 
 **WS モード** を有効化すると、MaiRec は専用の自動解決ワーカーとして動作します：
 
-1. **持続的接続の維持**: Offscreen ドキュメント（`ws/offscreen.html`）を介して `wss://ws.captcharaptor.com` と接続し、MV3 バックグラウンドスクリプトのサスペンドを回避します。
+1. **持続的接続の維持**: Offscreen ドキュメント（`ws/offscreen.html`）を介してディスパッチサーバーと持続的な WebSocket 接続を確立し、MV3 バックグラウンドスクリプトのサスペンドを回避します。
 2. **イベントループ健全性監視**: メインスレッドのジッター（P50、P95、P99 レイテンシ）を測定し、ハートビートと共に送信することで、高負荷状態のブラウザへのタスク過剰割り振りを防止します。
 3. **CDP による高速サンドボックス化**:
    - 解決タスク（`{ url, sitekey }`）を受信すると、制御用タブを生成。
@@ -435,16 +432,15 @@ MaiRec には `declarativeNetRequest` によるリダイレクトルールが含
 
 ---
 
-## プライバシーとデータ収集に関する開示
+## プライバシーとデータ保護に関する開示
 
 MaiRec は透明性の高いプライバシー運用を行っています：
 
 - **完全ローカル推論**: すべての画像スライス処理、知覚ハッシュ検索、ニューラルネットワーク推論は、100% ユーザー端末の CPU 上で実行されます。**認証解決を目的として画像を外部サーバーへ送信することは一切ありません。**
-- **任意の学習データ収集**:
-  - 拡張機能には、オープンモデルの精度向上のためのオプショナルなデータ収集モジュール（`uploader.js`）が含まれています。
-  - 有効化されている場合、匿名化されたチャレンジ画像、選択されたタイル番号、認証成否結果（`tokenOk`）がブラウザの IndexedDB（`caplog`）に保存されます。
-  - ブラウザがアイドル状態の際に、NDJSON 形式で学習サーバー `captcharaptor.com` へバッチアップロードされます。
-  - **オプトアウト可能**: ポップアップの **Reports** メニューから、このデータ送信機能をいつでも完全に無効化できます。個人情報（PII）、閲覧履歴、Cookie、認証パスワード等は一切収集されません。
+- **プライバシーの徹底**:
+  - ユーザーのプライバシー保護を徹底するため、リモートへのテレメトリデータ送信は完全に無効化されています。
+  - 個人情報（PII）、閲覧履歴、Cookie、認証パスワード等が収集または外部送信されることは一切ありません。
+  - ローカルデータベースおよび AI モデルはブラウザサンドボックス内のみで安全に動作します。
 
 ---
 

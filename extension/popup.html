@@ -2,112 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-i18n="appName">MaiRec</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   
+  <!-- Main Settings View -->
   <div id="page_main">
-    <div class="header">
+    <header class="header">
       <div class="brand">
+        <img src="icon/32.png" alt="MaiRec" class="brand-icon" width="22" height="22">
         <h1 data-i18n="appName">MaiRec</h1>
         <span class="badge">v1.2</span>
       </div>
-    </div>
+    </header>
 
     <!-- Solver Settings Section -->
-    <section class="card">
-      <div class="card-header">
-        <h2 data-i18n="section_solver">Solver Settings</h2>
+    <section class="settings-group">
+      <div class="section-title" data-i18n="section_solver">Solver Settings</div>
+      <div class="card">
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="language">Language</span>
+          <select id="lang_select" class="lang-select" aria-label="Language">
+            <option value="en">English</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="zh">简体中文 (Simplified Chinese)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="solver_enabled">Solver enabled</span>
+          <label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="recaptcha_support">reCAPTCHA support</span>
+          <label class="switch"><input type="checkbox" id="recaptcha"><span class="slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="autoclick_buttons">Auto-click buttons</span>
+          <label class="switch"><input type="checkbox" id="autoclick"><span class="slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="solve_images">Solve image challenges</span>
+          <label class="switch"><input type="checkbox" id="images"><span class="slider"></span></label>
+        </div>
       </div>
-      <hr class="divider">
-      <div class="kv">
-        <span data-i18n="language">Language</span>
-        <select id="lang_select" class="lang-select" aria-label="Language">
-          <option value="en">English</option>
-          <option value="ja">日本語 (Japanese)</option>
-          <option value="zh">简体中文 (Simplified Chinese)</option>
-        </select>
-
-        <span data-i18n="solver_enabled">Solver enabled</span>
-        <label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label>
-
-        <span data-i18n="recaptcha_support">reCAPTCHA support</span>
-        <label class="switch"><input type="checkbox" id="recaptcha"><span class="slider"></span></label>
-
-        <span data-i18n="autoclick_buttons">Auto-click buttons</span>
-        <label class="switch"><input type="checkbox" id="autoclick"><span class="slider"></span></label>
-
-        <span data-i18n="solve_images">Solve image challenges</span>
-        <label class="switch"><input type="checkbox" id="images"><span class="slider"></span></label>
-      </div>
-      <p class="small help" data-i18n="help_local_models">Models run locally, no data is sent outside.</p>
+      <p class="section-footer" data-i18n="help_local_models">Models run locally, no data is sent outside.</p>
     </section>
 
     <!-- Timeout Settings / Report Section -->
-    <section class="card">
-      <div class="card-header">
-        <h2 data-i18n="section_timeout_report">Timeout Settings / Report</h2>
-      </div>
-      <hr class="divider">
-      <div class="kv">
-        <span id="ws_mode_label" data-i18n="ws_mode" data-i18n-title="ws_mode_tooltip" title="Requires a 32-character API key" class="hidden">WS mode</span>
-        <label class="switch hidden" id="ws_mode_switch"><input type="checkbox" id="ws_mode" disabled><span class="slider"></span></label>
-      </div>
-      <div class="btn-grid">
-        <button id="open_timeouts" class="btn btn-secondary" data-i18n="btn_timeouts">Timeouts</button>
-        <button id="open_reports" class="btn btn-secondary" data-i18n="btn_reports">Reports</button>
+    <section class="settings-group">
+      <div class="section-title" data-i18n="section_timeout_report">Timeout Settings / Report</div>
+      <div class="card">
+        <div class="setting-row ws-row" id="ws_mode_container">
+          <span id="ws_mode_label" data-i18n="ws_mode" data-i18n-title="ws_mode_tooltip" title="Requires a 32-character API key" class="setting-label hidden">WS mode</span>
+          <label class="switch hidden" id="ws_mode_switch"><input type="checkbox" id="ws_mode" disabled><span class="slider"></span></label>
+        </div>
+        <div class="card-action-bar">
+          <button id="open_timeouts" class="btn btn-secondary" data-i18n="btn_timeouts">Timeouts</button>
+          <button id="open_reports" class="btn btn-secondary" data-i18n="btn_reports">Reports</button>
+        </div>
       </div>
     </section>
-
-    <div class="footer small">
-      <a href="https://captchaplugin.com" target="_blank" rel="noopener noreferrer" data-i18n="visit_website">Visit captchaplugin.com</a>
-    </div>
   </div>
 
-  
-  <!-- Reports Submenu Page -->
+  <!-- Reports Submenu View -->
   <div id="page_reports" class="hidden">
-    <div class="header-row">
+    <header class="header-nav">
+      <button id="back_main" class="mac-back-btn" data-i18n="btn_back">← Back</button>
       <h1 data-i18n="reports_title">Reports</h1>
-      <button id="back_main" class="btn inline-btn" data-i18n="btn_back">← Back</button>
-    </div>
+      <div class="header-nav-spacer"></div>
+    </header>
 
-    <section class="card">
-      <div class="reports-grid">
-        <span data-i18n="enable_reports">Enable reports (disabled)</span>
-        <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
+    <section class="settings-group">
+      <div class="card">
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="enable_reports">Enable reports (disabled)</span>
+          <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
+        </div>
 
-        <span id="rep_key_label" data-i18n="rep_key_label_16">API key (16 chars)</span>
-        <input type="text" id="rep_key" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456" spellcheck="false" autocomplete="off">
+        <div class="setting-row-block">
+          <label class="setting-label" id="rep_key_label" data-i18n="rep_key_label_16">API key (16 chars)</label>
+          <input type="text" id="rep_key" class="mac-input" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456" spellcheck="false" autocomplete="off">
+        </div>
 
-        <button id="rep_send" class="btn full" data-i18n="btn_send_reports">Send reports</button>
-        <span id="rep_status" class="small status full"></span>
+        <div class="setting-row-action">
+          <button id="rep_send" class="btn btn-secondary btn-full" data-i18n="btn_send_reports">Send reports</button>
+          <div id="rep_status" class="status-message"></div>
+        </div>
       </div>
     </section>
   </div>
 
-
-  <!-- Timeouts Submenu Page -->
+  <!-- Timeouts Submenu View -->
   <div id="page_timeouts" class="hidden">
-    <div class="header-row">
+    <header class="header-nav">
+      <button id="back_main_t" class="mac-back-btn" data-i18n="btn_back">← Back</button>
       <h1 data-i18n="timeouts_title_ms">Timeouts (ms)</h1>
-      <button id="back_main_t" class="btn inline-btn" data-i18n="btn_back">← Back</button>
-    </div>
+      <div class="header-nav-spacer"></div>
+    </header>
 
-    <section class="card">
-      <div class="kv">
-        <span data-i18n="timeout_between_clicks">Between tile clicks</span>
-        <span class="unit"><input type="number" id="click_delay" min="0" max="5000" step="10" placeholder="300"><small data-i18n="unit_ms">ms</small></span>
+    <section class="settings-group">
+      <div class="card">
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="timeout_between_clicks">Between tile clicks</span>
+          <div class="unit-box">
+            <input type="number" id="click_delay" min="0" max="5000" step="10" placeholder="300">
+            <small data-i18n="unit_ms">ms</small>
+          </div>
+        </div>
 
-        <span data-i18n="timeout_dynamic_reveal">Dynamic reveal → click</span>
-        <span class="unit"><input type="number" id="reveal_delay" min="0" max="5000" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="timeout_dynamic_reveal">Dynamic reveal → click</span>
+          <div class="unit-box">
+            <input type="number" id="reveal_delay" min="0" max="5000" step="10" placeholder="850">
+            <small data-i18n="unit_ms">ms</small>
+          </div>
+        </div>
 
-        <span data-i18n="timeout_verify">Last click → verify</span>
-        <span class="unit"><input type="number" id="verify_delay" min="0" max="5000" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
+        <div class="setting-row">
+          <span class="setting-label" data-i18n="timeout_verify">Last click → verify</span>
+          <div class="unit-box">
+            <input type="number" id="verify_delay" min="0" max="5000" step="10" placeholder="850">
+            <small data-i18n="unit_ms">ms</small>
+          </div>
+        </div>
       </div>
-      <p class="small help" data-i18n="help_timeouts">A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent.</p>
+      <p class="section-footer" data-i18n="help_timeouts">A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent.</p>
     </section>
   </div>
 
