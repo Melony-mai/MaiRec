@@ -22,6 +22,7 @@
         "libs/onnxruntime-web/**",
         "captcha/libs/onnxruntime-web/**",
         "captcha/recaptcha_ai.js",
+        "captcha/model_worker.js",
         "ws/recaptcha_frame_watch.js"
       ],
       "matches": [

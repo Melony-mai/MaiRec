@@ -342,7 +342,7 @@ MaiRec/
 7. *(Recommended)* Pin the extension to your browser toolbar for easy configuration.
 
 > [!NOTE]
-> On the first run, loading the WebAssembly runtime and compiling the ONNX models may take between 5 to 15 seconds depending on your CPU. Subsequent inferences execute in real time.
+> **Proactive Background Warm-up**: MaiRec automatically initializes and pre-warms the WebAssembly runtime and ONNX models in the background when the browser starts. When your first CAPTCHA challenge arrives, the engine is already warm, executing inferences instantly in ~180 ms.
 
 ---
 
@@ -420,8 +420,8 @@ The remote protocol is fully compatible with standard 2Captcha and Anti-Captcha 
 
 ## Troubleshooting & FAQ
 
-#### 1. Why does the solver hesitate on the very first captcha after browser launch?
-WebAssembly SIMD binaries (`ort-wasm-simd-threaded.jsep.wasm`) and the three ONNX models (~77 MB total) are compiled and loaded into memory on first invocation. This creates a one-time cold-start delay of 5–15 seconds. Once cached in memory, subsequent solves proceed without hesitation.
+#### 1. How is initial model cold-start eliminated?
+In earlier releases, WebAssembly SIMD binaries and ONNX models were loaded on-demand when the first CAPTCHA appeared, causing an initial delay. MaiRec now features an asynchronous background warm-up engine running in a persistent offscreen document: upon browser launch, all neural models (`type.onnx`, `grid.onnx`, `motorcycles_b1.onnx`) are preloaded and warmed up with dummy inferences without delaying browser startup. The first CAPTCHA solve executes at full operational speed (~180 ms).
 
 #### 2. Why does a yellow banner stating "MaiRec started debugging this browser" appear?
 This banner is a built-in Chrome security requirement whenever an extension utilizes the `chrome.debugger` API. It only appears when **WS mode** (remote control) is active. The standard offline extension does not trigger this banner.

@@ -47,10 +47,11 @@ self.WS_MODE_AVAILABLE = true;
     try {
       if (await chrome.offscreen.hasDocument()) return;
       const offscreenReason = (chrome.offscreen && chrome.offscreen.Reason && chrome.offscreen.Reason.BLOBS) || 'BLOBS';
+      const workerReason = (chrome.offscreen && chrome.offscreen.Reason && chrome.offscreen.Reason.WORKERS) || 'WORKERS';
       await chrome.offscreen.createDocument({
         url: chrome.runtime.getURL(OFFSCREEN_URL),
-        reasons: [offscreenReason],
-        justification: 'Keep a persistent WebSocket connection to receive captcha-solving commands.',
+        reasons: [offscreenReason, workerReason],
+        justification: 'Background captcha inference engine and WebSocket worker.',
       });
     } catch (e) {
       console.warn('[ws] ensureOffscreen:', e);
@@ -58,9 +59,10 @@ self.WS_MODE_AVAILABLE = true;
   }
 
   async function closeOffscreen() {
-    if (!chrome.offscreen) return;
+    // The offscreen document is shared with the proactive OCR model engine.
+    // Disabling WS mode disconnects the WebSocket client while preserving the warmed-up models.
     try {
-      if (await chrome.offscreen.hasDocument()) await chrome.offscreen.closeDocument();
+      chrome.runtime.sendMessage({ type: 'enabled_changed', enabled: false });
     } catch {}
   }
 

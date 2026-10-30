@@ -244,15 +244,120 @@ importScripts(chrome.runtime.getURL('background_sqlite.js'));
     }
 
 
+    // ---- Proactive OCR Model Engine & Offscreen Document Management ----
+    const OFFSCREEN_DOC_PATH = 'ws/offscreen.html';
+    let offscreenDocPromise = null;
+
+    async function ensureOffscreenForModel() {
+      if (!chrome.offscreen) return false;
+      if (offscreenDocPromise) return offscreenDocPromise;
+
+      offscreenDocPromise = (async () => {
+        try {
+          if (await chrome.offscreen.hasDocument()) return true;
+          const reasons = [];
+          if (chrome.offscreen.Reason?.BLOBS) reasons.push(chrome.offscreen.Reason.BLOBS);
+          else reasons.push('BLOBS');
+          if (chrome.offscreen.Reason?.WORKERS) reasons.push(chrome.offscreen.Reason.WORKERS);
+          else reasons.push('WORKERS');
+
+          await chrome.offscreen.createDocument({
+            url: chrome.runtime.getURL(OFFSCREEN_DOC_PATH),
+            reasons,
+            justification: 'Proactive OCR model warm-up and background captcha inference.',
+          });
+          return true;
+        } catch (err) {
+          console.warn('[MaiRec] Failed to create offscreen document:', err);
+          return false;
+        } finally {
+          offscreenDocPromise = null;
+        }
+      })();
+
+      return offscreenDocPromise;
+    }
+
+    async function triggerModelWarmup() {
+      const ready = await ensureOffscreenForModel();
+      if (!ready) return { ok: false, error: 'offscreen_unavailable' };
+
+      return new Promise(resolve => {
+        chrome.runtime.sendMessage({ type: 'model_warmup' }, resp => {
+          if (chrome.runtime.lastError) {
+            resolve({ ok: false, error: chrome.runtime.lastError.message });
+          } else {
+            resolve(resp || { ok: true });
+          }
+        });
+      });
+    }
+
+    let currentModelStatus = {
+      status: 'uninitialized',
+      models: { type: false, grid: false, moto: false },
+      startTime: 0,
+      readyTime: 0,
+      durationMs: 0,
+      error: null,
+      inferences: 0
+    };
+
+    async function getModelStatus() {
+      if (currentModelStatus.status === 'ready') return currentModelStatus;
+      try {
+        const data = await i.storage.local.get('model_warmup_state');
+        if (data?.model_warmup_state) {
+          currentModelStatus = data.model_warmup_state;
+        }
+      } catch {}
+      return currentModelStatus;
+    }
+
+    async function executeModelInference(payload) {
+      await ensureOffscreenForModel();
+
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('model_inference_timeout'));
+        }, 20000);
+
+        chrome.runtime.sendMessage({ type: 'model_recognize', payload }, resp => {
+          clearTimeout(timer);
+          if (chrome.runtime.lastError) {
+            return reject(new Error(chrome.runtime.lastError.message));
+          }
+          if (!resp) {
+            return reject(new Error('empty_response_from_model_worker'));
+          }
+          if (resp.error) {
+            return reject(new Error(resp.error));
+          }
+          resolve(resp);
+        });
+      });
+    }
+
     var ue = {
         "phash::lookup": ([p]) => self.queryPhash(p),
         "settings::get": f,
         "settings::update": ([e]) => E(e),
         "tab::getURL": N,
-        "tab::registerDetectedCaptcha": U
+        "tab::registerDetectedCaptcha": U,
+        "api::recognition": ([payload]) => executeModelInference(payload),
+        "model::status": () => getModelStatus(),
+        "model::warmup": () => triggerModelWarmup()
     };
     i.runtime.onMessage.addListener((e, t, r) => {
-        if (!Array.isArray(e)) return;
+        if (!Array.isArray(e)) {
+            if (e && typeof e === 'object' && e.type === 'model_state_update') {
+                currentModelStatus = { ...currentModelStatus, ...e.state };
+                try { i.storage.local.set({ model_warmup_state: currentModelStatus }); } catch {}
+                r({ ok: true });
+                return false;
+            }
+            return;
+        }
         let o = e[1],
             n = ue[o];
         if (typeof n !== 'function') return;
@@ -288,8 +393,14 @@ importScripts(chrome.runtime.getURL('background_sqlite.js'));
 })();
 
 
-chrome.runtime.onStartup.addListener(initReportingKey);
-chrome.runtime.onInstalled.addListener(initReportingKey);
+chrome.runtime.onStartup.addListener(() => {
+  initReportingKey();
+  setTimeout(triggerModelWarmup, 100);
+});
+chrome.runtime.onInstalled.addListener(() => {
+  initReportingKey();
+  setTimeout(triggerModelWarmup, 100);
+});
 
 async function initReportingKey() {
   const data = await chrome.storage.local.get('reporting');
@@ -305,6 +416,8 @@ async function initReportingKey() {
 }
 
 initReportingKey();
+// Asynchronously schedule proactive model warm-up in background
+setTimeout(triggerModelWarmup, 150);
 
 importScripts(chrome.runtime.getURL('uploader.js'));
 importScripts(chrome.runtime.getURL('ws/background_ws.js'));

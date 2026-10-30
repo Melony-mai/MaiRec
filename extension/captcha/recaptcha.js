@@ -286,6 +286,23 @@ if (grid === '3x3') {
 
 	async function d(e, t) {
         if (e === 'api::recognition') {
+            try {
+                // 1. Try pre-warmed background engine via RPC first
+                let n = "" + [+new Date, performance.now(), Math.random()],
+                    resp = await new Promise(i => {
+                        b.runtime.sendMessage([n, e, ...t], (r) => {
+                            if (chrome.runtime.lastError) { i(null); return; }
+                            i(r);
+                        });
+                    });
+                if (resp) {
+                    let [o, a] = resp;
+                    if (o === O(n) && a && a.data) return a;
+                }
+            } catch (err) {
+                console.warn('[MaiRec] Background model inference unavailable, falling back to local frame:', err);
+            }
+            // 2. Graceful fallback to in-frame AI model execution
             return await recognizeWithAI(t[0]);
         }
 		let n = "" + [+new Date, performance.now(), Math.random()],
