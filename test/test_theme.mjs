@@ -77,6 +77,14 @@ async function runThemeTests() {
       return res.result.value;
     }
 
+    async function setSystemTheme(scheme) {
+      await send('Emulation.setEmulatedMedia', {
+        media: 'screen',
+        features: [{ name: 'prefers-color-scheme', value: scheme }]
+      });
+      await new Promise(r => setTimeout(r, 150));
+    }
+
     // 1. Verify default theme (Dark Mode)
     console.log('[1] Verifying default theme state (Dark Mode):');
     const defaultState = await evaluate(() => {
@@ -328,6 +336,14 @@ async function runThemeTests() {
       return res.result.value;
     }
 
+    async function setRepSystemTheme(scheme) {
+      await sendRep('Emulation.setEmulatedMedia', {
+        media: 'screen',
+        features: [{ name: 'prefers-color-scheme', value: scheme }]
+      });
+      await new Promise(r => setTimeout(r, 150));
+    }
+
     const standaloneState = await evaluateRep(() => {
       const html = document.documentElement;
       const themeAttr = html.getAttribute('data-theme');
@@ -413,6 +429,243 @@ async function runThemeTests() {
           throw new Error(`Vertical overflow (>580px) detected in ${theme} mode at ${res.name}: ${metrics.scrollHeight}px`);
         }
         console.log(`    ✓ ${res.name}: height ${metrics.scrollHeight}px, clientWidth ${metrics.clientWidth}px, 0 overflow`);
+      }
+    }
+
+    // 8. Test System Theme Mode (Automatic OS Appearance Detection)
+    console.log('\n[8] Testing System Theme Mode (Automatic OS Appearance Detection):');
+    // Emulate system light mode
+    await setSystemTheme('light');
+
+    // Switch to system theme via theme_select
+    await evaluate(() => {
+      const select = document.getElementById('theme_select');
+      select.value = 'system';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await new Promise(r => setTimeout(r, 200));
+
+    const systemLightState = await evaluate(() => {
+      const html = document.documentElement;
+      const themeAttr = html.getAttribute('data-theme');
+      const themePref = html.getAttribute('data-theme-preference');
+      const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+      const cardBg = window.getComputedStyle(document.querySelector('.card')).backgroundColor;
+      const selectVal = document.getElementById('theme_select').value;
+      const themeBtn = document.getElementById('theme_toggle_btn');
+      const sunIcon = themeBtn.querySelector('.icon-sun');
+      const moonIcon = themeBtn.querySelector('.icon-moon');
+      const sunDisplay = window.getComputedStyle(sunIcon).display;
+      const moonDisplay = window.getComputedStyle(moonIcon).display;
+
+      return {
+        themeAttr,
+        themePref,
+        bodyBg,
+        cardBg,
+        selectVal,
+        sunDisplay,
+        moonDisplay
+      };
+    });
+
+    if (systemLightState.selectVal !== 'system') {
+      throw new Error(`Expected theme_select to be "system", got "${systemLightState.selectVal}"`);
+    }
+    if (systemLightState.themeAttr !== 'light') {
+      throw new Error(`Expected effective theme to be "light" under OS light mode, got "${systemLightState.themeAttr}"`);
+    }
+    if (systemLightState.bodyBg !== 'rgb(242, 242, 247)') {
+      throw new Error(`Expected light body background rgb(242, 242, 247), got "${systemLightState.bodyBg}"`);
+    }
+    if (systemLightState.cardBg !== 'rgb(255, 255, 255)') {
+      throw new Error(`Expected light card background rgb(255, 255, 255), got "${systemLightState.cardBg}"`);
+    }
+    if (systemLightState.moonDisplay === 'none' || systemLightState.sunDisplay !== 'none') {
+      throw new Error(`Moon icon should be active in light appearance, got moon=${systemLightState.moonDisplay}, sun=${systemLightState.sunDisplay}`);
+    }
+    console.log('  ✓ System Theme accurately detected OS Light Mode and applied Light Mode (bg: ' + systemLightState.bodyBg + ')');
+
+    // 9. Test Live Dynamic System Theme Response (Light -> Dark without reload)
+    console.log('\n[9] Testing Live Dynamic System Theme Response (without reload or restart):');
+    await setSystemTheme('dark');
+    await new Promise(r => setTimeout(r, 200));
+
+    const systemDarkState = await evaluate(() => {
+      const html = document.documentElement;
+      const themeAttr = html.getAttribute('data-theme');
+      const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+      const cardBg = window.getComputedStyle(document.querySelector('.card')).backgroundColor;
+      const selectVal = document.getElementById('theme_select').value;
+      const themeBtn = document.getElementById('theme_toggle_btn');
+      const sunIcon = themeBtn.querySelector('.icon-sun');
+      const moonIcon = themeBtn.querySelector('.icon-moon');
+      const sunDisplay = window.getComputedStyle(sunIcon).display;
+      const moonDisplay = window.getComputedStyle(moonIcon).display;
+
+      return {
+        themeAttr,
+        bodyBg,
+        cardBg,
+        selectVal,
+        sunDisplay,
+        moonDisplay
+      };
+    });
+
+    if (systemDarkState.themeAttr !== 'dark') {
+      throw new Error(`Expected live switch to "dark", got "${systemDarkState.themeAttr}"`);
+    }
+    if (systemDarkState.bodyBg !== 'rgb(28, 28, 30)') {
+      throw new Error(`Expected dark body background rgb(28, 28, 30), got "${systemDarkState.bodyBg}"`);
+    }
+    if (systemDarkState.sunDisplay === 'none' || systemDarkState.moonDisplay !== 'none') {
+      throw new Error(`Sun icon should be active in dark appearance, got sun=${systemDarkState.sunDisplay}, moon=${systemDarkState.moonDisplay}`);
+    }
+    if (systemDarkState.selectVal !== 'system') {
+      throw new Error(`Expected theme_select to maintain "system", got "${systemDarkState.selectVal}"`);
+    }
+    console.log('  ✓ Dynamically responded to OS appearance change (Dark Mode) in real time without page reload');
+
+    // 10. Test Manual Override behavior
+    console.log('\n[10] Verifying manual theme selection overrides OS preference until switched back to System Theme:');
+    // While OS is dark, manually select Light Mode
+    await evaluate(() => {
+      const select = document.getElementById('theme_select');
+      select.value = 'light';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await new Promise(r => setTimeout(r, 150));
+
+    // Change OS appearance to dark (same as current) then verify light mode remains
+    await setSystemTheme('dark');
+    const manualLightState = await evaluate(() => {
+      return {
+        themeAttr: document.documentElement.getAttribute('data-theme'),
+        selectVal: document.getElementById('theme_select').value,
+        bodyBg: window.getComputedStyle(document.body).backgroundColor
+      };
+    });
+    if (manualLightState.themeAttr !== 'light' || manualLightState.selectVal !== 'light') {
+      throw new Error(`Manual light selection failed to hold against OS theme: ${JSON.stringify(manualLightState)}`);
+    }
+    console.log('  ✓ Manual Light Mode strictly retained while OS is Dark');
+
+    // Switch back to System Theme
+    await evaluate(() => {
+      const select = document.getElementById('theme_select');
+      select.value = 'system';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await new Promise(r => setTimeout(r, 150));
+
+    const restoredSystemState = await evaluate(() => {
+      return {
+        themeAttr: document.documentElement.getAttribute('data-theme'),
+        selectVal: document.getElementById('theme_select').value
+      };
+    });
+    if (restoredSystemState.themeAttr !== 'dark' || restoredSystemState.selectVal !== 'system') {
+      throw new Error(`Switching back to system failed: ${JSON.stringify(restoredSystemState)}`);
+    }
+    console.log('  ✓ Returning to System Theme immediately re-engages OS appearance following');
+
+    // 11. Test System Theme Persistence Across Reopening/Reloading
+    console.log('\n[11] Testing System Theme persistence across popup reload / reopening:');
+    await setSystemTheme('light');
+    // Ensure system is saved
+    await evaluate(() => {
+      const select = document.getElementById('theme_select');
+      select.value = 'system';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await new Promise(r => setTimeout(r, 200));
+
+    // Reload popup
+    await send('Page.reload');
+    await new Promise(r => setTimeout(r, 500));
+
+    const reloadedSystemLight = await evaluate(() => {
+      return {
+        themeAttr: document.documentElement.getAttribute('data-theme'),
+        selectVal: document.getElementById('theme_select').value,
+        bodyBg: window.getComputedStyle(document.body).backgroundColor
+      };
+    });
+
+    if (reloadedSystemLight.selectVal !== 'system' || reloadedSystemLight.themeAttr !== 'light') {
+      throw new Error(`System theme persistence failed on reload: ${JSON.stringify(reloadedSystemLight)}`);
+    }
+    console.log('  ✓ System Theme setting ("system") and resolved Light Mode successfully retained on reload');
+
+    // 12. Test Standalone reports.html Live System Theme Response
+    console.log('\n[12] Testing Standalone reports.html Live System Theme Response:');
+    // Set stored theme to system
+    await evaluateRep(async () => {
+      await chrome.storage.local.set({ theme: 'system' });
+    });
+    await new Promise(r => setTimeout(r, 150));
+
+    await setRepSystemTheme('light');
+    const repSysLight = await evaluateRep(() => {
+      return {
+        themeAttr: document.documentElement.getAttribute('data-theme'),
+        bodyBg: window.getComputedStyle(document.body).backgroundColor
+      };
+    });
+    if (repSysLight.themeAttr !== 'light' || repSysLight.bodyBg !== 'rgb(242, 242, 247)') {
+      throw new Error(`Standalone reports.html failed under system light mode: ${JSON.stringify(repSysLight)}`);
+    }
+    console.log('  ✓ Standalone reports.html cleanly followed System Light Mode');
+
+    await setRepSystemTheme('dark');
+    await new Promise(r => setTimeout(r, 200));
+    const repSysDark = await evaluateRep(() => {
+      return {
+        themeAttr: document.documentElement.getAttribute('data-theme'),
+        bodyBg: window.getComputedStyle(document.body).backgroundColor
+      };
+    });
+    if (repSysDark.themeAttr !== 'dark' || repSysDark.bodyBg !== 'rgb(28, 28, 30)') {
+      throw new Error(`Standalone reports.html failed under system dark mode: ${JSON.stringify(repSysDark)}`);
+    }
+    console.log('  ✓ Standalone reports.html dynamically updated to System Dark Mode without reload');
+
+    // 13. Verify multi-resolution layout safety in System Theme mode
+    console.log('\n[13] Verifying multi-resolution layout safety in System Theme mode:');
+    for (const sysScheme of ['light', 'dark']) {
+      await setSystemTheme(sysScheme);
+      await evaluate(`() => {
+        const select = document.getElementById('theme_select');
+        select.value = 'system';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }`);
+      await new Promise(r => setTimeout(r, 100));
+
+      for (const res of resolutions) {
+        await send('Emulation.setDeviceMetricsOverride', {
+          width: 368,
+          height: 600,
+          deviceScaleFactor: res.dpr,
+          mobile: false
+        });
+
+        const metrics = await evaluate(() => {
+          return {
+            hasHorizontalOverflow: document.body.scrollWidth > document.body.clientWidth,
+            hasVerticalOverflow: document.body.scrollHeight > 580,
+            scrollHeight: document.body.scrollHeight,
+            clientWidth: document.body.clientWidth
+          };
+        });
+
+        if (metrics.hasHorizontalOverflow) {
+          throw new Error(`Horizontal overflow detected in system (${sysScheme}) mode at ${res.name}`);
+        }
+        if (metrics.hasVerticalOverflow) {
+          throw new Error(`Vertical overflow (>580px) detected in system (${sysScheme}) mode at ${res.name}: ${metrics.scrollHeight}px`);
+        }
+        console.log(`    ✓ System (${sysScheme.toUpperCase()}) ${res.name}: height ${metrics.scrollHeight}px, clientWidth ${metrics.clientWidth}px, 0 overflow`);
       }
     }
 

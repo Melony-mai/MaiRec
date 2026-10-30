@@ -15,6 +15,7 @@
  */
 
 import { spawnSync, execSync } from 'child_process';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -93,6 +94,8 @@ function parseArgs(argv) {
     remoteUrl: DEFAULT_REMOTE_URL,
     strategy: 'merge', // 'merge', 'rebase', 'ff-only'
     checkOnly: false,
+    serve: false,
+    port: 38888,
     skipTests: false,
     skipStash: false,
     verbose: false,
@@ -106,6 +109,13 @@ function parseArgs(argv) {
       options.help = true;
     } else if (arg === '--check' || arg === '--status' || arg === '--dry-run') {
       options.checkOnly = true;
+    } else if ((arg === '--serve' || arg === '-s') && i + 1 < argv.length && /^\d+$/.test(argv[i + 1])) {
+      options.serve = true;
+      options.port = parseInt(argv[++i], 10);
+    } else if (arg === '--serve' || arg === '-s') {
+      options.serve = true;
+    } else if (arg === '--port' && i + 1 < argv.length) {
+      options.port = parseInt(argv[++i], 10);
     } else if (arg === '--skip-tests') {
       options.skipTests = true;
     } else if (arg === '--skip-stash') {
@@ -143,6 +153,9 @@ Usage:
 Options:
   ${colors.bold}--check, --status, --dry-run${colors.reset}
       Check remote synchronization status without applying changes or modifying files.
+
+  ${colors.bold}--serve, -s [port]${colors.reset}
+      Start local synchronization bridge server (default port: 38888) for extension integration.
 
   ${colors.bold}--remote <name>${colors.reset}
       Name of the Git remote (default: "${DEFAULT_REMOTE_NAME}").
@@ -651,6 +664,112 @@ export async function syncRepository(options = {}) {
   return { success: true, relation, currentCommit: runGit(['rev-parse', 'HEAD'], { cwd }).stdout };
 }
 
+/**
+ * Start a lightweight local synchronization bridge server
+ * Allows the browser extension popup settings interface to directly query
+ * git status and trigger safe repository updates.
+ */
+export function startSyncServer(options = {}) {
+  const port = options.port || 38888;
+  const cwd = options.cwd || PROJECT_ROOT;
+  const remote = options.remote || DEFAULT_REMOTE_NAME;
+  const branch = options.branch || '';
+  const remoteUrl = options.remoteUrl || DEFAULT_REMOTE_URL;
+
+  const server = http.createServer(async (req, res) => {
+    // Enable CORS for Chrome Extension origins
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+    const pathname = parsedUrl.pathname;
+
+    try {
+      if (req.method === 'GET' && (pathname === '/health' || pathname === '/status' || pathname === '/api/status')) {
+        const curBranch = getCurrentBranch(cwd);
+        const status = getWorkingTreeStatus(cwd);
+        const headRes = runGit(['rev-parse', 'HEAD'], { cwd });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: true,
+          branch: curBranch,
+          localHead: headRes.success ? headRes.stdout : '',
+          isClean: status.isClean,
+          uncommittedCount: status.trackedModified.length + status.untracked.length,
+          conflicted: status.conflictedFiles
+        }));
+        return;
+      }
+
+      if (req.method === 'POST' && (pathname === '/check' || pathname === '/api/check')) {
+        const checkRes = await syncRepository({
+          cwd,
+          remote,
+          branch,
+          remoteUrl,
+          checkOnly: true,
+          skipTests: true
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: checkRes.success,
+          success: checkRes.success,
+          relation: checkRes.relation,
+          localHead: checkRes.localHead,
+          remoteHead: checkRes.remoteHead,
+          updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT'
+        }));
+        return;
+      }
+
+      if (req.method === 'POST' && (pathname === '/sync' || pathname === '/api/sync')) {
+        const syncRes = await syncRepository({
+          cwd,
+          remote,
+          branch,
+          remoteUrl,
+          strategy: options.strategy || 'merge',
+          skipTests: options.skipTests || false
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: syncRes.success,
+          success: syncRes.success,
+          relation: syncRes.relation,
+          currentCommit: syncRes.currentCommit,
+          code: syncRes.code,
+          conflicts: syncRes.conflicts || [],
+          error: syncRes.error
+        }));
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Endpoint not found' }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, success: false, error: err.message }));
+    }
+  });
+
+  return new Promise((resolve, reject) => {
+    server.listen(port, '127.0.0.1', () => {
+      logSuccess(`Local synchronization bridge server active on http://127.0.0.1:${port}`);
+      resolve(server);
+    });
+    server.on('error', reject);
+  });
+}
+
 // Run CLI if invoked directly
 const isDirectExecution = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename);
 if (isDirectExecution) {
@@ -660,15 +779,23 @@ if (isDirectExecution) {
     process.exit(0);
   }
 
-  syncRepository(options)
-    .then(result => {
-      process.exit(result.success ? 0 : 1);
-    })
-    .catch(err => {
-      logError(`Unhandled synchronization exception: ${err.message}`);
-      if (options.verbose) {
-        console.error(err.stack);
-      }
-      process.exit(1);
-    });
+  if (options.serve) {
+    startSyncServer(options)
+      .catch(err => {
+        logError(`Failed to start sync server: ${err.message}`);
+        process.exit(1);
+      });
+  } else {
+    syncRepository(options)
+      .then(result => {
+        process.exit(result.success ? 0 : 1);
+      })
+      .catch(err => {
+        logError(`Unhandled synchronization exception: ${err.message}`);
+        if (options.verbose) {
+          console.error(err.stack);
+        }
+        process.exit(1);
+      });
+  }
 }

@@ -44,10 +44,21 @@ export const translations = {
     "section_solver": "Solver Settings",
     "section_timeout_report": "Timeout Settings / Report",
     "theme": "Theme",
+    "theme_system": "System",
     "theme_dark": "Dark",
     "theme_light": "Light",
     "theme_toggle_to_light": "Switch to light mode",
-    "theme_toggle_to_dark": "Switch to dark mode"
+    "theme_toggle_to_dark": "Switch to dark mode",
+    "btn_check_updates": "Check for Updates",
+    "btn_sync_now": "Update Now",
+    "btn_retry": "Retry",
+    "status_checking": "Checking...",
+    "status_up_to_date": "Up to date",
+    "status_update_available": "Update available",
+    "status_syncing": "Synchronizing...",
+    "status_update_failed": "Update failed",
+    "status_conflict": "Sync conflict detected",
+    "status_network_error": "Network connection error"
   },
   "ja": {
     "appName": "MaiRec",
@@ -83,10 +94,21 @@ export const translations = {
     "section_solver": "ソルバー設定",
     "section_timeout_report": "タイムアウト設定 / レポート",
     "theme": "テーマ",
+    "theme_system": "システム",
     "theme_dark": "ダーク",
     "theme_light": "ライト",
     "theme_toggle_to_light": "ライトモードに切り替え",
-    "theme_toggle_to_dark": "ダークモードに切り替え"
+    "theme_toggle_to_dark": "ダークモードに切り替え",
+    "btn_check_updates": "更新を確認",
+    "btn_sync_now": "今すぐ更新",
+    "btn_retry": "再試行",
+    "status_checking": "確認中...",
+    "status_up_to_date": "最新の状態です",
+    "status_update_available": "更新が利用可能",
+    "status_syncing": "同期中...",
+    "status_update_failed": "更新に失敗しました",
+    "status_conflict": "同期の競合が検出されました",
+    "status_network_error": "ネットワーク接続エラー"
   },
   "zh": {
     "appName": "MaiRec",
@@ -122,10 +144,21 @@ export const translations = {
     "section_solver": "求解器设置",
     "section_timeout_report": "超时设置 / 报告",
     "theme": "主题",
+    "theme_system": "跟随系统",
     "theme_dark": "深色",
     "theme_light": "浅色",
     "theme_toggle_to_light": "切换到浅色模式",
-    "theme_toggle_to_dark": "切换到深色模式"
+    "theme_toggle_to_dark": "切换到深色模式",
+    "btn_check_updates": "检查更新",
+    "btn_sync_now": "立即更新",
+    "btn_retry": "重试",
+    "status_checking": "正在检查...",
+    "status_up_to_date": "已是最新版本",
+    "status_update_available": "有新版本可用",
+    "status_syncing": "正在同步...",
+    "status_update_failed": "更新失败",
+    "status_conflict": "检测到同步冲突",
+    "status_network_error": "网络连接错误"
   }
 };
 

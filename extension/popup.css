@@ -110,6 +110,95 @@
   color-scheme: light;
 }
 
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    /* macOS Light Aqua System Palette */
+    --mac-window-bg: #f2f2f7;
+    --mac-card-bg: #ffffff;
+    --mac-card-border: rgba(0, 0, 0, 0.08);
+    --mac-row-border: rgba(0, 0, 0, 0.06);
+    --mac-text-primary: #1d1d1f;
+    --mac-text-secondary: rgba(60, 60, 67, 0.65);
+    --mac-text-muted: rgba(60, 60, 67, 0.45);
+    --mac-accent: #007aff;
+    --mac-accent-hover: #0062cc;
+    --mac-success: #34c759;
+    --mac-switch-off: rgba(120, 120, 128, 0.24);
+    --mac-input-bg: #ffffff;
+    --mac-input-border: rgba(0, 0, 0, 0.15);
+    --mac-btn-bg: #ffffff;
+    --mac-btn-border: rgba(0, 0, 0, 0.14);
+    --mac-btn-hover: #f5f5f7;
+    --mac-btn-active: rgba(0, 0, 0, 0.06);
+    --mac-focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.35);
+    --mac-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+    --mac-badge-bg: rgba(0, 0, 0, 0.05);
+    --mac-badge-border: rgba(0, 0, 0, 0.08);
+    --mac-badge-color: var(--mac-text-secondary);
+    --mac-row-hover: rgba(0, 0, 0, 0.02);
+    --mac-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --mac-btn-border-hover: rgba(0, 0, 0, 0.22);
+    --mac-scrollbar-thumb: rgba(0, 0, 0, 0.2);
+    --mac-scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+    --mac-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(0,0,0,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+    --mac-option-bg: #ffffff;
+    --mac-option-color: #1d1d1f;
+    color-scheme: light;
+  }
+
+  [data-theme="system"] .theme-toggle-btn .icon-sun {
+    display: none;
+  }
+  [data-theme="system"] .theme-toggle-btn .icon-moon {
+    display: block;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --mac-window-bg: #1c1c1e;
+    --mac-card-bg: rgba(255, 255, 255, 0.05);
+    --mac-card-border: rgba(255, 255, 255, 0.08);
+    --mac-row-border: rgba(255, 255, 255, 0.06);
+    --mac-text-primary: #f5f5f7;
+    --mac-text-secondary: rgba(235, 235, 245, 0.55);
+    --mac-text-muted: rgba(235, 235, 245, 0.38);
+    --mac-accent: #0A84FF;
+    --mac-accent-hover: #0077ED;
+    --mac-success: #34c759;
+    --mac-switch-off: rgba(120, 120, 128, 0.36);
+    --mac-input-bg: rgba(0, 0, 0, 0.28);
+    --mac-input-border: rgba(255, 255, 255, 0.14);
+    --mac-btn-bg: rgba(255, 255, 255, 0.08);
+    --mac-btn-border: rgba(255, 255, 255, 0.12);
+    --mac-btn-hover: rgba(255, 255, 255, 0.13);
+    --mac-btn-active: rgba(255, 255, 255, 0.05);
+    --mac-focus-ring: 0 0 0 3px rgba(10, 132, 255, 0.35);
+    --mac-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+
+    --mac-badge-bg: rgba(255, 255, 255, 0.08);
+    --mac-badge-border: rgba(255, 255, 255, 0.08);
+    --mac-badge-color: var(--mac-text-secondary);
+    --mac-row-hover: rgba(255, 255, 255, 0.02);
+    --mac-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    --mac-btn-border-hover: rgba(255, 255, 255, 0.2);
+    --mac-scrollbar-thumb: rgba(255, 255, 255, 0.2);
+    --mac-scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
+    --mac-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+    --mac-option-bg: #252528;
+    --mac-option-color: #f5f5f7;
+    color-scheme: dark;
+  }
+
+  [data-theme="system"] .theme-toggle-btn .icon-moon {
+    display: none;
+  }
+  [data-theme="system"] .theme-toggle-btn .icon-sun {
+    display: block;
+  }
+}
+
 * {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
@@ -149,16 +238,22 @@ body {
 /* Header & Branding */
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
   padding: 0 2px 2px;
   margin-bottom: 6px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
 }
 
 .brand-icon {
@@ -186,6 +281,144 @@ h1 {
   color: var(--mac-badge-color);
   border: 1px solid var(--mac-badge-border);
   letter-spacing: 0.2px;
+}
+
+/* Update Button & Status */
+.mac-btn-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mac-btn-bg);
+  color: var(--mac-text-primary);
+  border: 1px solid var(--mac-btn-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-shadow: var(--mac-btn-shadow);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.mac-btn-update:hover {
+  background: var(--mac-btn-hover);
+  border-color: var(--mac-btn-border-hover);
+}
+
+.mac-btn-update:active {
+  background: var(--mac-btn-active);
+  transform: scale(0.98);
+}
+
+.mac-btn-update:focus-visible {
+  box-shadow: var(--mac-focus-ring);
+  outline: none;
+}
+
+.mac-btn-update.btn-accent {
+  background: var(--mac-accent);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgba(10, 132, 255, 0.4);
+}
+
+.mac-btn-update.btn-accent:hover {
+  background: var(--mac-accent-hover);
+}
+
+.mac-btn-update.is-loading {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.mac-btn-update.is-loading .update-icon {
+  animation: macSpin 0.9s linear infinite;
+}
+
+.update-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+@keyframes macSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.update-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  line-height: 1.35;
+  border-radius: 6px;
+  background: var(--mac-card-bg);
+  border: 1px solid var(--mac-row-border);
+  color: var(--mac-text-secondary);
+  box-sizing: border-box;
+  animation: macFadeIn 0.15s ease-out;
+}
+
+.update-status.hidden {
+  display: none !important;
+}
+
+.update-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--mac-text-muted);
+}
+
+.update-status.status-checking .update-status-dot {
+  background-color: var(--mac-accent);
+  animation: macPulse 1s ease-in-out infinite alternate;
+}
+
+.update-status.status-up-to-date .update-status-dot {
+  background-color: var(--mac-success);
+}
+
+.update-status.status-available .update-status-dot {
+  background-color: var(--mac-accent);
+}
+
+.update-status.status-syncing .update-status-dot {
+  background-color: var(--mac-accent);
+  animation: macPulse 0.7s ease-in-out infinite alternate;
+}
+
+.update-status.status-failed .update-status-dot,
+.update-status.status-conflict .update-status-dot {
+  background-color: #ff453a;
+}
+
+[data-theme="light"] .update-status.status-failed .update-status-dot,
+[data-theme="light"] .update-status.status-conflict .update-status-dot {
+  background-color: #d70015;
+}
+
+.update-status-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes macPulse {
+  from { opacity: 0.35; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes macFadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Submenu Navigation Header */

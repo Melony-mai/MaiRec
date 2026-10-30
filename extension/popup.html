@@ -11,15 +11,25 @@
   <!-- Main Settings View -->
   <div id="page_main">
     <header class="header">
-      <div class="brand">
-        <img src="icon/32.png" alt="MaiRec" class="brand-icon" width="22" height="22">
-        <h1 data-i18n="appName">MaiRec</h1>
-        <span class="badge">v1.31</span>
+      <div class="header-row">
+        <div class="brand">
+          <img src="icon/32.png" alt="MaiRec" class="brand-icon" width="22" height="22">
+          <h1 data-i18n="appName">MaiRec</h1>
+          <span class="badge">v1.31</span>
+          <button id="check_update_btn" class="mac-btn-update" type="button" aria-label="Check for Updates" data-i18n-title="btn_check_updates" title="Check for Updates">
+            <svg class="update-icon" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span id="update_btn_text" data-i18n="btn_check_updates">Check for Updates</span>
+          </button>
+        </div>
+        <button id="theme_toggle_btn" class="theme-toggle-btn" type="button" aria-label="Toggle theme" title="Switch to light mode">
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
       </div>
-      <button id="theme_toggle_btn" class="theme-toggle-btn" type="button" aria-label="Toggle theme" title="Switch to light mode">
-        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-      </button>
+      <div id="update_status" class="update-status hidden" role="status" aria-live="polite">
+        <span class="update-status-dot"></span>
+        <span id="update_status_text"></span>
+      </div>
     </header>
 
     <!-- Solver Settings Section -->
@@ -38,7 +48,8 @@
         <div class="setting-row">
           <span class="setting-label" data-i18n="theme">Theme</span>
           <select id="theme_select" class="lang-select" aria-label="Theme">
-            <option value="dark" data-i18n="theme_dark">Dark</option>
+            <option value="system" data-i18n="theme_system">System</option>
+            <option value="dark" data-i18n="theme_dark" selected>Dark</option>
             <option value="light" data-i18n="theme_light">Light</option>
           </select>
         </div>

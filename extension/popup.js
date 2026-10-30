@@ -13,8 +13,17 @@ import {
   applyTheme,
   updateThemeButton,
   normalizeTheme,
+  resolveEffectiveTheme,
+  initSystemThemeListener,
   DEFAULT_THEME
 } from './theme.js';
+import {
+  checkUpdates,
+  synchronizeProject,
+  getStoredSyncState,
+  setStoredSyncState,
+  formatStatusMessage
+} from './sync.js';
 
 const $  = id  => document.getElementById(id);
 const qq = sel => document.querySelector(sel);
@@ -48,6 +57,7 @@ async function changeLanguage(newLang) {
   }
   applyTranslations(currentLang);
   updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+  renderSyncUI(currentSyncState);
   await setStoredLanguage(currentLang);
   save(readUI());
   renderStatus(lastReportsState);
@@ -81,10 +91,17 @@ async function initTheme() {
   if (themeToggle) {
     updateThemeButton(themeToggle, currentTheme, currentLang);
     themeToggle.addEventListener('click', async () => {
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      const effective = resolveEffectiveTheme(currentTheme);
+      const nextTheme = effective === 'dark' ? 'light' : 'dark';
       await changeTheme(nextTheme);
     });
   }
+  initSystemThemeListener(() => {
+    if (currentTheme === 'system') {
+      applyTheme(currentTheme);
+      updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+    }
+  });
 }
 
 if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
@@ -313,3 +330,113 @@ async function initWsMode() {
 }
 
 initWsMode();
+
+// ---- Manual Update-Check & Synchronization Engine ----
+let currentSyncState = null;
+
+function renderSyncUI(state) {
+  currentSyncState = state;
+  const btn = $('check_update_btn');
+  const btnText = $('update_btn_text');
+  const statusEl = $('update_status');
+  const statusText = $('update_status_text');
+  if (!btn || !statusEl || !statusText) return;
+
+  btn.classList.remove('btn-accent', 'is-loading');
+  btn.disabled = false;
+  statusEl.className = 'update-status';
+
+  if (!state || !state.status || state.status === 'idle') {
+    statusEl.classList.add('hidden');
+    if (btnText) btnText.textContent = getMessage('btn_check_updates', currentLang);
+    btn.title = getMessage('btn_check_updates', currentLang);
+    return;
+  }
+
+  statusEl.classList.remove('hidden');
+
+  switch (state.status) {
+    case 'checking':
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      if (btnText) btnText.textContent = getMessage('status_checking', currentLang);
+      statusEl.classList.add('status-checking');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+
+    case 'syncing':
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      if (btnText) btnText.textContent = getMessage('status_syncing', currentLang);
+      statusEl.classList.add('status-syncing');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+
+    case 'update_available':
+      btn.disabled = false;
+      btn.classList.add('btn-accent');
+      if (btnText) btnText.textContent = getMessage('btn_sync_now', currentLang);
+      btn.title = getMessage('btn_sync_now', currentLang);
+      statusEl.classList.add('status-available');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+
+    case 'up_to_date':
+      btn.disabled = false;
+      if (btnText) btnText.textContent = getMessage('btn_check_updates', currentLang);
+      btn.title = getMessage('btn_check_updates', currentLang);
+      statusEl.classList.add('status-up-to-date');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+
+    case 'conflict':
+      btn.disabled = false;
+      if (btnText) btnText.textContent = getMessage('btn_retry', currentLang);
+      btn.title = getMessage('btn_retry', currentLang);
+      statusEl.classList.add('status-conflict', 'status-failed');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+
+    case 'failed':
+    default:
+      btn.disabled = false;
+      if (btnText) btnText.textContent = getMessage('btn_retry', currentLang);
+      btn.title = getMessage('btn_retry', currentLang);
+      statusEl.classList.add('status-failed');
+      statusText.textContent = formatStatusMessage(state, currentLang);
+      break;
+  }
+}
+
+async function handleUpdateClick() {
+  if (currentSyncState && currentSyncState.status === 'update_available') {
+    renderSyncUI({ status: 'syncing' });
+    try {
+      const res = await synchronizeProject();
+      renderSyncUI(res);
+    } catch (err) {
+      renderSyncUI({ status: 'failed', error: err.message });
+    }
+  } else {
+    renderSyncUI({ status: 'checking' });
+    try {
+      const res = await checkUpdates();
+      renderSyncUI(res);
+    } catch (err) {
+      renderSyncUI({ status: 'failed', error: err.message });
+    }
+  }
+}
+
+async function initSync() {
+  const btn = $('check_update_btn');
+  if (btn) {
+    btn.addEventListener('click', handleUpdateClick);
+  }
+  const savedState = await getStoredSyncState();
+  if (savedState) {
+    renderSyncUI(savedState);
+  }
+}
+
+initSync();

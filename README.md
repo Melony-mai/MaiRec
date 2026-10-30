@@ -80,6 +80,11 @@ Whether you are performing web scraping, penetration testing, automated regressi
   - Intercepts requests via Chrome DevTools Protocol (CDP 1.3 `Fetch`/`Network` domain), injects lightweight solving templates, and returns verification tokens to central dispatchers.
 - **Multilingual User Interface**:
   - Fully localized extension popup supporting 3 languages: Simplified Chinese, Japanese, and English, with dynamic switching and persistent storage.
+- **macOS-Inspired Design System & Dynamic Theme Switching**:
+  - Replicates native Apple System Settings with inset grouped cards, smooth toggle animations, and translucent surfaces.
+  - Three distinct theme options: **System Theme**, **Dark Mode**, and **Light Mode**.
+  - **System Theme (Auto-Detection)**: Automatically detects and follows the operating system's appearance preference (`prefers-color-scheme`). Live changes in the OS appearance take effect immediately without requiring browser or extension restarts.
+  - **Manual Theme Switching & Persistence**: Instant theme toggling via the header toggle button or the theme dropdown in Solver Settings. Manual selections override the system preference until the user switches back to System Theme, and preferences persist across browser restarts.
 
 ---
 
@@ -373,6 +378,7 @@ The popup interface is logically organized into two primary sections: **Solver S
 | Option | Default | Description |
 |---|---|---|
 | **Language** | `English` | Choose extension interface language (English, 日本語, or 简体中文). Preferences persist across browser sessions. |
+| **Theme** | `Dark` | Switch between **System Theme**, **Dark Mode**, and **Light Mode**. When set to System Theme, the extension automatically detects and follows the operating system's appearance preference in real time without restart. Manual Light or Dark selections override the system preference until switched back to System Theme. |
 | **Solver enabled** | `On` | Global master toggle for all extension solving features. |
 | **reCAPTCHA support** | `On` | Enables or disables interception of Google reCAPTCHA challenges. |
 | **Auto-click buttons** | `On` | Automatically clicks the "I'm not a robot" checkbox when detected. |
@@ -450,9 +456,9 @@ MaiRec is committed to transparent data handling:
 
 Contributions, bug reports, and pull requests are welcome!
 
-### Direct Repository Synchronization & Iteration
+### Direct Repository Synchronization & Popup UI Integration
 
-MaiRec provides a built-in automated synchronization engine (`npm run sync` / `./sync.sh`) that connects directly with the upstream GitHub repository (`https://github.com/Melony-mai/MaiRec.git`) to keep your local workspace up-to-date without requiring manual re-downloads or re-cloning:
+MaiRec provides a built-in automated synchronization engine accessible both directly through the **"Check for Updates" button in the extension popup interface** and via command-line tooling (`npm run sync` / `./sync.sh`) that connects directly with the upstream GitHub repository (`https://github.com/Melony-mai/MaiRec.git`) to keep your local workspace up-to-date without requiring manual re-downloads or re-cloning:
 
 ```bash
 # Direct synchronization with upstream GitHub main branch
@@ -463,12 +469,16 @@ npm run sync
 
 # Inspect sync status and incoming commits without applying changes
 npm run sync:check
+
+# Start local synchronization bridge service for extension integration
+npm run sync:server
 ```
 
-**Key Safety Guarantees:**
+**Key Safety Guarantees & UI Features:**
+- **In-Popup One-Click Update & Status**: Click the "Check for Updates" button next to the version badge in the popup header to check GitHub in real time. When updates are available, the button highlights as "Update Now" to synchronize directly, displaying clear status indicators (`Up to date`, `Checking...`, `Update available`, or `Update failed`).
 - **Zero Work Loss**: Uncommitted modifications, staged files, and untracked files are automatically detected and safely preserved in Git stash before any remote changes are integrated.
 - **Direct Remote Iteration**: Automatically fetches and merges latest upstream commits directly into your local working branch.
-- **Safe Merge Conflict Handling**: If conflicts occur between incoming remote changes and local edits, MaiRec halts safely without clobbering files, preserves all work, and prints clear instructions on how to resolve the conflicted files.
+- **Safe Merge Conflict Handling**: If conflicts occur between incoming remote changes and local edits, MaiRec halts safely without clobbering files, preserves all work, and clearly reports conflicted files with actionable guidance.
 - **Automatic Health & Regression Verification**: Automatically runs project manifest checks, dependency integrity checks, and the automated test suite (`npm test`) immediately after synchronization to ensure the codebase remains fully operational.
 
 ### Development Workflow

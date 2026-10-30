@@ -38,7 +38,13 @@ const requiredIds = [
   'rep_status',
   'ws_mode',
   'ws_mode_label',
-  'ws_mode_switch'
+  'ws_mode_switch',
+  'theme_toggle_btn',
+  'theme_select',
+  'check_update_btn',
+  'update_status',
+  'update_btn_text',
+  'update_status_text'
 ];
 
 console.log('[1] Checking required DOM element IDs in popup.html:');
@@ -107,7 +113,23 @@ const settingKeys = [
   'timeout_dynamic_reveal',
   'timeout_verify',
   'unit_ms',
-  'help_timeouts'
+  'help_timeouts',
+  'theme',
+  'theme_system',
+  'theme_dark',
+  'theme_light',
+  'theme_toggle_to_light',
+  'theme_toggle_to_dark',
+  'btn_check_updates',
+  'btn_sync_now',
+  'btn_retry',
+  'status_checking',
+  'status_up_to_date',
+  'status_update_available',
+  'status_syncing',
+  'status_update_failed',
+  'status_conflict',
+  'status_network_error'
 ];
 
 for (const lang of ['en', 'ja', 'zh']) {
@@ -119,7 +141,7 @@ for (const lang of ['en', 'ja', 'zh']) {
     }
   }
 }
-console.log('  ✓ All 23 setting keys are fully translated across English, Japanese, and Simplified Chinese.');
+console.log(`  ✓ All ${settingKeys.length} setting keys are fully translated across English, Japanese, and Simplified Chinese.`);
 
 // 5. Verify reports.html structure
 console.log('\n[5] Verifying reports.html:');
@@ -143,6 +165,7 @@ const essentialFiles = [
   'extension/background_sqlite.js',
   'extension/uploader.js',
   'extension/popup.js',
+  'extension/sync.js',
   'extension/reports.js',
   'extension/captcha/recaptcha.js',
   'extension/captcha/recaptcha_ai.js',

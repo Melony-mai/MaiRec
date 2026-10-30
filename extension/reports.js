@@ -1,5 +1,5 @@
 import { getMessage, applyTranslations, getStoredLanguage } from './i18n.js';
-import { getStoredTheme, applyTheme, setStoredTheme, updateThemeButton, normalizeTheme } from './theme.js';
+import { getStoredTheme, applyTheme, setStoredTheme, updateThemeButton, normalizeTheme, resolveEffectiveTheme, initSystemThemeListener } from './theme.js';
 
 (async function(){
   const q = sel => document.querySelector(sel);
@@ -20,10 +20,18 @@ import { getStoredTheme, applyTheme, setStoredTheme, updateThemeButton, normaliz
   updateThemeButton(themeBtn, currentTheme, currentLang);
 
   themeBtn?.addEventListener('click', async () => {
-    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const effective = resolveEffectiveTheme(currentTheme);
+    currentTheme = effective === 'dark' ? 'light' : 'dark';
     applyTheme(currentTheme);
     updateThemeButton(themeBtn, currentTheme, currentLang);
     await setStoredTheme(currentTheme);
+  });
+
+  initSystemThemeListener(() => {
+    if (currentTheme === 'system') {
+      applyTheme(currentTheme);
+      updateThemeButton(themeBtn, currentTheme, currentLang);
+    }
   });
 
   if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {

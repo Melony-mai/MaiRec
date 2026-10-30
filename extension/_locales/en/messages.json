@@ -98,6 +98,9 @@
   "theme": {
     "message": "Theme"
   },
+  "theme_system": {
+    "message": "System"
+  },
   "theme_dark": {
     "message": "Dark"
   },

@@ -146,6 +146,8 @@ Applied globally across all elements:
 | **Nav Back Button** | `.mac-back-btn` | `12px` | `500` | Normal | `0px` | `--mac-text-primary` | Header back navigation |
 | **Select Menu** | `select.lang-select`| `12.5px` | `400` | Normal | `0px` | `--mac-text-primary` | Dropdown control |
 | **Version Badge** | `.badge` | `11px` | `500` | Normal | `+0.2px` | `--mac-text-secondary` | Pill badge next to title |
+| **Update Button** | `.mac-btn-update` | `11px` | `500` | `1.25` | `0px` | `--mac-text-primary` | Header update check & sync action button |
+| **Update Status Indicator** | `.update-status` | `11px` | `400` | `1.35` | `0px` | `--mac-text-secondary` | Real-time Git & repository sync status |
 | **Input (Number)** | `input[type="number"]`| `13px` | `400` | Normal | `0px` | `--mac-text-primary` | Tabular numbers |
 | **Input (Monospace)** | `.mac-input` | `13px` | `400` | Normal | `0px` | `--mac-text-primary` | Key / secret inputs |
 | **Input Unit Label** | `.unit-box small` | `12px` | `400` | Normal | `0px` | `--mac-text-secondary` | e.g., "ms" indicator |
@@ -216,14 +218,25 @@ Each page container inherits the exact same vertical flex layout:
 
 ## 5. UI Component Specifications
 
-### 5.1. Branding Header (Main View)
+### 5.1. Branding Header & Update Synchronization (Main View)
 
 ```html
 <header class="header">
-  <div class="brand">
-    <img src="icon/32.png" alt="App" class="brand-icon" width="22" height="22">
-    <h1>AppName</h1>
-    <span class="badge">v1.31</span>
+  <div class="header-row">
+    <div class="brand">
+      <img src="icon/32.png" alt="App" class="brand-icon" width="22" height="22">
+      <h1>AppName</h1>
+      <span class="badge">v1.31</span>
+      <button id="check_update_btn" class="mac-btn-update" type="button" aria-label="Check for Updates">
+        <svg class="update-icon" viewBox="0 0 24 24" ...></svg>
+        <span id="update_btn_text">Check for Updates</span>
+      </button>
+    </div>
+    <button id="theme_toggle_btn" class="theme-toggle-btn" ...></button>
+  </div>
+  <div id="update_status" class="update-status hidden" role="status" aria-live="polite">
+    <span class="update-status-dot"></span>
+    <span id="update_status_text"></span>
   </div>
 </header>
 ```
@@ -231,16 +244,22 @@ Each page container inherits the exact same vertical flex layout:
 ```css
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
   padding: 0 2px 2px;
   margin-bottom: 6px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
 }
 
 .brand-icon {
@@ -256,10 +275,46 @@ Each page container inherits the exact same vertical flex layout:
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--mac-text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--mac-badge-bg);
+  color: var(--mac-badge-color);
+  border: 1px solid var(--mac-badge-border);
   letter-spacing: 0.2px;
+}
+
+.mac-btn-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mac-btn-bg);
+  color: var(--mac-text-primary);
+  border: 1px solid var(--mac-btn-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-shadow: var(--mac-btn-shadow);
+  line-height: 1.25;
+}
+
+.mac-btn-update.btn-accent {
+  background: var(--mac-accent);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.update-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: var(--mac-card-bg);
+  border: 1px solid var(--mac-row-border);
+  color: var(--mac-text-secondary);
 }
 ```
 
@@ -512,6 +567,12 @@ Replaces default browser dropdowns with a dark-styled select box with an embedde
   <option value="en">English</option>
   <option value="ja">日本語 (Japanese)</option>
   <option value="zh">简体中文 (Simplified Chinese)</option>
+</select>
+
+<select id="theme_select" class="lang-select" aria-label="Theme">
+  <option value="system">System</option>
+  <option value="dark" selected>Dark</option>
+  <option value="light">Light</option>
 </select>
 ```
 

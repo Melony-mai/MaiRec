@@ -98,6 +98,9 @@
   "theme": {
     "message": "主题"
   },
+  "theme_system": {
+    "message": "跟随系统"
+  },
   "theme_dark": {
     "message": "深色"
   },
