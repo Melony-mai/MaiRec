@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "打开 MaiRec"
+  },
+  "language": {
+    "message": "语言"
+  },
+  "solver_enabled": {
+    "message": "已启用求解器"
+  },
+  "recaptcha_support": {
+    "message": "reCAPTCHA 支持"
+  },
+  "autoclick_buttons": {
+    "message": "自动点击按钮"
+  },
+  "solve_images": {
+    "message": "解决图片挑战"
+  },
+  "ws_mode": {
+    "message": "WS 模式"
+  },
+  "ws_mode_tooltip": {
+    "message": "需要 32 位字符的 API 密钥"
+  },
+  "help_local_models": {
+    "message": "模型在本地运行，不会向外发送任何数据。"
+  },
+  "btn_timeouts": {
+    "message": "超时设置"
+  },
+  "btn_reports": {
+    "message": "报告"
+  },
+  "visit_website": {
+    "message": "访问 captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← 返回"
+  },
+  "reports_title": {
+    "message": "报告"
+  },
+  "enable_reports": {
+    "message": "启用报告（已禁用）"
+  },
+  "rep_key_label_16": {
+    "message": "API 密钥（16 位字符）"
+  },
+  "rep_key_label_16_32": {
+    "message": "API 密钥（16 或 32 位字符）"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "发送报告"
+  },
+  "status_uploads_disabled": {
+    "message": "数据上传已禁用。"
+  },
+  "status_last_sent": {
+    "message": "最后发送的报告: "
+  },
+  "status_last_error": {
+    "message": "最后错误: "
+  },
+  "timeouts_title": {
+    "message": "超时"
+  },
+  "timeouts_title_ms": {
+    "message": "超时（毫秒）"
+  },
+  "timeout_between_clicks": {
+    "message": "图块点击间隔"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "动态出现 → 点击"
+  },
+  "timeout_verify": {
+    "message": "最后点击 → 验证"
+  },
+  "unit_ms": {
+    "message": "毫秒"
+  },
+  "help_timeouts": {
+    "message": "每个超时时间都会随机增加 0–300 毫秒。动态出现会计算已消耗的识别时间。"
   }
 }

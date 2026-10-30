@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "MaiRec を開く"
+  },
+  "language": {
+    "message": "言語"
+  },
+  "solver_enabled": {
+    "message": "ソルバー有効"
+  },
+  "recaptcha_support": {
+    "message": "reCAPTCHAサポート"
+  },
+  "autoclick_buttons": {
+    "message": "ボタンの自動クリック"
+  },
+  "solve_images": {
+    "message": "画像認証を解決"
+  },
+  "ws_mode": {
+    "message": "WSモード"
+  },
+  "ws_mode_tooltip": {
+    "message": "32文字のAPIキーが必要です"
+  },
+  "help_local_models": {
+    "message": "モデルはローカルで実行され、外部にデータは送信されません。"
+  },
+  "btn_timeouts": {
+    "message": "タイムアウト"
+  },
+  "btn_reports": {
+    "message": "レポート"
+  },
+  "visit_website": {
+    "message": "captchaplugin.com にアクセス"
+  },
+  "btn_back": {
+    "message": "← 戻る"
+  },
+  "reports_title": {
+    "message": "レポート"
+  },
+  "enable_reports": {
+    "message": "レポートを有効化（無効）"
+  },
+  "rep_key_label_16": {
+    "message": "APIキー（16文字）"
+  },
+  "rep_key_label_16_32": {
+    "message": "APIキー（16または32文字）"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "レポートを送信"
+  },
+  "status_uploads_disabled": {
+    "message": "データのアップロードは無効です。"
+  },
+  "status_last_sent": {
+    "message": "最終レポート送信: "
+  },
+  "status_last_error": {
+    "message": "最後のエラー: "
+  },
+  "timeouts_title": {
+    "message": "タイムアウト"
+  },
+  "timeouts_title_ms": {
+    "message": "タイムアウト (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "タイルのクリック間隔"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "動的表示 → クリック"
+  },
+  "timeout_verify": {
+    "message": "最後のクリック → 確認"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "各タイムアウトにランダムで 0〜300 ms が追加されます。動的表示はすでに費やされた認識時間をカウントします。"
   }
 }

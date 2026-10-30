@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Open MaiRec"
+  },
+  "language": {
+    "message": "Language"
+  },
+  "solver_enabled": {
+    "message": "Solver enabled"
+  },
+  "recaptcha_support": {
+    "message": "reCAPTCHA support"
+  },
+  "autoclick_buttons": {
+    "message": "Auto-click buttons"
+  },
+  "solve_images": {
+    "message": "Solve image challenges"
+  },
+  "ws_mode": {
+    "message": "WS mode"
+  },
+  "ws_mode_tooltip": {
+    "message": "Requires a 32-character API key"
+  },
+  "help_local_models": {
+    "message": "Models run locally, no data is sent outside."
+  },
+  "btn_timeouts": {
+    "message": "Timeouts"
+  },
+  "btn_reports": {
+    "message": "Reports"
+  },
+  "visit_website": {
+    "message": "Visit captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Back"
+  },
+  "reports_title": {
+    "message": "Reports"
+  },
+  "enable_reports": {
+    "message": "Enable reports (disabled)"
+  },
+  "rep_key_label_16": {
+    "message": "API key (16 chars)"
+  },
+  "rep_key_label_16_32": {
+    "message": "API key (16 or 32 chars)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Send reports"
+  },
+  "status_uploads_disabled": {
+    "message": "Data uploads are disabled."
+  },
+  "status_last_sent": {
+    "message": "Last report sent: "
+  },
+  "status_last_error": {
+    "message": "Last error: "
+  },
+  "timeouts_title": {
+    "message": "Timeouts"
+  },
+  "timeouts_title_ms": {
+    "message": "Timeouts (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Between tile clicks"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Dynamic reveal → click"
+  },
+  "timeout_verify": {
+    "message": "Last click → verify"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent."
   }
 }

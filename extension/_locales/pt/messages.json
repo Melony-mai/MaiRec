@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Abrir MaiRec"
+  },
+  "language": {
+    "message": "Idioma"
+  },
+  "solver_enabled": {
+    "message": "Solucionador ativado"
+  },
+  "recaptcha_support": {
+    "message": "Suporte ao reCAPTCHA"
+  },
+  "autoclick_buttons": {
+    "message": "Clique automático em botões"
+  },
+  "solve_images": {
+    "message": "Resolver desafios de imagens"
+  },
+  "ws_mode": {
+    "message": "Modo WS"
+  },
+  "ws_mode_tooltip": {
+    "message": "Requer uma chave de API de 32 caracteres"
+  },
+  "help_local_models": {
+    "message": "Os modelos rodam localmente, nenhum dado é enviado para fora."
+  },
+  "btn_timeouts": {
+    "message": "Tempos limite"
+  },
+  "btn_reports": {
+    "message": "Relatórios"
+  },
+  "visit_website": {
+    "message": "Visite captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Voltar"
+  },
+  "reports_title": {
+    "message": "Relatórios"
+  },
+  "enable_reports": {
+    "message": "Ativar relatórios (desativado)"
+  },
+  "rep_key_label_16": {
+    "message": "Chave API (16 caracteres)"
+  },
+  "rep_key_label_16_32": {
+    "message": "Chave API (16 ou 32 caracteres)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Enviar relatórios"
+  },
+  "status_uploads_disabled": {
+    "message": "O envio de dados está desativado."
+  },
+  "status_last_sent": {
+    "message": "Último relatório enviado: "
+  },
+  "status_last_error": {
+    "message": "Último erro: "
+  },
+  "timeouts_title": {
+    "message": "Tempos limite"
+  },
+  "timeouts_title_ms": {
+    "message": "Tempos limite (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Entre cliques nos blocos"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Revelação dinâmica → clique"
+  },
+  "timeout_verify": {
+    "message": "Último clique → verificar"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "Um tempo aleatório de 0–300 ms é adicionado a cada tempo limite. A revelação dinâmica conta o tempo de reconhecimento já decorrido."
   }
 }

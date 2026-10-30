@@ -1,7 +1,18 @@
+import {
+  SUPPORTED_LANGUAGES,
+  translations,
+  normalizeLanguage,
+  getMessage,
+  applyTranslations,
+  getStoredLanguage,
+  setStoredLanguage
+} from './i18n.js';
 
 const $  = id  => document.getElementById(id);
 const qq = sel => document.querySelector(sel);
 
+let currentLang = 'en';
+let lastReportsState = {};
 
 function show(page){
   $('page_main').classList.toggle('hidden', page !== 'main');
@@ -13,13 +24,48 @@ $('open_timeouts').addEventListener('click', () => show('timeouts'));
 $('back_main').addEventListener('click',  () => show('main'));
 $('back_main_t').addEventListener('click', () => show('main'));
 
+function updateRepKeyLabel() {
+  const keyLabel = $('rep_key_label');
+  if (!keyLabel) return;
+  const isWs = !$('ws_mode_label')?.classList.contains('hidden');
+  keyLabel.textContent = getMessage(isWs ? 'rep_key_label_16_32' : 'rep_key_label_16', currentLang);
+}
+
+async function changeLanguage(newLang) {
+  currentLang = normalizeLanguage(newLang);
+  const langSelect = $('lang_select');
+  if (langSelect && langSelect.value !== currentLang) {
+    langSelect.value = currentLang;
+  }
+  applyTranslations(currentLang);
+  await setStoredLanguage(currentLang);
+  save(readUI());
+  renderStatus(lastReportsState);
+  await loadWsMode();
+  updateRepKeyLabel();
+}
+
+async function initI18n() {
+  currentLang = await getStoredLanguage();
+  const langSelect = $('lang_select');
+  if (langSelect) {
+    langSelect.value = currentLang;
+    langSelect.addEventListener('change', async (e) => {
+      await changeLanguage(e.target.value);
+    });
+  }
+  applyTranslations(currentLang);
+}
+
+initI18n();
 
 const defaults = {
   enabled:true, recaptcha:true, autoclick:true, images:true,
-  click_delay:300, reveal_delay:850, verify_delay:850
+  click_delay:300, reveal_delay:850, verify_delay:850,
+  language:'en'
 };
 
-chrome.storage.local.get('settings').then(({ settings = {} }) => {
+chrome.storage.local.get(['settings', 'language']).then(({ settings = {}, language }) => {
   const ui = { ...defaults };
   ui.enabled      = settings.enabled ?? defaults.enabled;
   ui.autoclick    = settings.recaptcha_auto_open  ?? defaults.autoclick;
@@ -36,6 +82,14 @@ chrome.storage.local.get('settings').then(({ settings = {} }) => {
   $('click_delay' ).value = ui.click_delay;
   $('reveal_delay').value = ui.reveal_delay;
   $('verify_delay').value = ui.verify_delay;
+
+  const savedLang = language || settings.language;
+  if (savedLang) {
+    currentLang = normalizeLanguage(savedLang);
+    const langSelect = $('lang_select');
+    if (langSelect) langSelect.value = currentLang;
+    applyTranslations(currentLang);
+  }
 });
 
 ['enabled','recaptcha','autoclick','images'].forEach(id => {
@@ -53,7 +107,8 @@ function readUI () {
     images:       $('images').checked,
     click_delay:  Math.max(0, Number($('click_delay').value)  || 0),
     reveal_delay: Math.max(0, Number($('reveal_delay').value) || 0),
-    verify_delay: Math.max(0, Number($('verify_delay').value) || 0)
+    verify_delay: Math.max(0, Number($('verify_delay').value) || 0),
+    language:     currentLang
   };
 }
 function save (ui) {
@@ -63,7 +118,8 @@ function save (ui) {
     recaptcha_auto_solve:           ui.recaptcha ? ui.images    : false,
     recaptcha_delay_between_clicks: ui.click_delay,
     recaptcha_delay_dynamic_reveal: ui.reveal_delay,
-    recaptcha_delay_before_verify:  ui.verify_delay
+    recaptcha_delay_before_verify:  ui.verify_delay,
+    language:                       ui.language
   };
   // settings::update merges into stored settings in the background (do NOT
   // storage.local.set here — that would wipe keys not present in `out`).
@@ -92,11 +148,12 @@ async function loadRep(){
   } catch(e){  }
 }
 function renderStatus(st){
+  lastReportsState = st || {};
   const el = qq('#rep_status');
   if (!el) return;
   const s = [];
-  if (st.last_success_ts) s.push('Last report sent: ' + new Date(st.last_success_ts).toLocaleString());
-  if (st.last_error_ts)   s.push('Last error: ' + new Date(st.last_error_ts).toLocaleString());
+  if (st.last_success_ts) s.push(getMessage('status_last_sent', currentLang) + new Date(st.last_success_ts).toLocaleString(currentLang));
+  if (st.last_error_ts)   s.push(getMessage('status_last_error', currentLang) + new Date(st.last_error_ts).toLocaleString(currentLang));
   if (st.last_error_reason) s.push(String(st.last_error_reason));
   el.textContent = s.join(' · ');
 }
@@ -117,7 +174,7 @@ qq('#rep_enabled')?.addEventListener('change', saveRep);
 qq('#rep_key')?.addEventListener('input',  saveRep);
 qq('#rep_send')?.addEventListener('click', async () => {
   const status = qq('#rep_status');
-  if (status) status.textContent = 'Data uploads are disabled.';
+  if (status) status.textContent = getMessage('status_uploads_disabled', currentLang);
   await rpc('reports::sendNow');
   const data = await rpc('reports::getState');
   renderStatus(data?.state || {});
@@ -150,7 +207,7 @@ async function loadWsMode() {
     wsToggle.disabled = !has32;
     wsToggle.checked  = has32 && enabledResp?.enabled === true;
     const label = $('ws_mode_label');
-    if (label) label.title = has32 ? '' : 'Requires a 32-character API key';
+    if (label) label.title = has32 ? '' : getMessage('ws_mode_tooltip', currentLang);
   } catch {}
 }
 
@@ -178,11 +235,9 @@ async function initWsMode() {
   if (await isWsModeAvailable()) {
     $('ws_mode_label').classList.remove('hidden');
     $('ws_mode_switch').classList.remove('hidden');
-    const keyLabel = $('rep_key_label');
-    if (keyLabel) keyLabel.textContent = 'API key (16 or 32 chars)';
+    updateRepKeyLabel();
   }
   await loadWsMode();
 }
 
 initWsMode();
-

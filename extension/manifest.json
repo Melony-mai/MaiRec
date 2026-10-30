@@ -1,11 +1,12 @@
 {
-  "name": "MaiRec",
-  "version": "1.36.46.151",
-  "description": "Automatically solves ReCaptcha images using a built-in neural network. Completely free. No registration or key purchase required.",
+  "name": "__MSG_appName__",
+  "version": "1.1",
+  "description": "__MSG_appDescription__",
   "default_locale": "en",
   "web_accessible_resources": [
     {
       "resources": [
+        "i18n.js",
         "models/type.onnx",
         "models/grid.onnx",
         "models/grid.meta.json",
@@ -77,7 +78,7 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
   },
   "action": {
-    "default_title": "MaiRec",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icon/16.png",
       "32": "icon/32.png",
@@ -91,5 +92,5 @@
     "*://*.recaptcha.net/recaptcha/*",
     "<all_urls>"
   ],
-  "version_name": "1.36.46.151"
+  "version_name": "1.1"
 }

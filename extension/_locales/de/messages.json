@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "MaiRec öffnen"
+  },
+  "language": {
+    "message": "Sprache"
+  },
+  "solver_enabled": {
+    "message": "Solver aktiviert"
+  },
+  "recaptcha_support": {
+    "message": "reCAPTCHA-Unterstützung"
+  },
+  "autoclick_buttons": {
+    "message": "Schaltflächen automatisch klicken"
+  },
+  "solve_images": {
+    "message": "Bild-Aufgaben lösen"
+  },
+  "ws_mode": {
+    "message": "WS-Modus"
+  },
+  "ws_mode_tooltip": {
+    "message": "Erfordert einen 32-stelligen API-Schlüssel"
+  },
+  "help_local_models": {
+    "message": "Modelle laufen lokal, es werden keine Daten nach außen gesendet."
+  },
+  "btn_timeouts": {
+    "message": "Timeouts"
+  },
+  "btn_reports": {
+    "message": "Berichte"
+  },
+  "visit_website": {
+    "message": "captchaplugin.com besuchen"
+  },
+  "btn_back": {
+    "message": "← Zurück"
+  },
+  "reports_title": {
+    "message": "Berichte"
+  },
+  "enable_reports": {
+    "message": "Berichte aktivieren (deaktiviert)"
+  },
+  "rep_key_label_16": {
+    "message": "API-Schlüssel (16 Zeichen)"
+  },
+  "rep_key_label_16_32": {
+    "message": "API-Schlüssel (16 oder 32 Zeichen)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Berichte senden"
+  },
+  "status_uploads_disabled": {
+    "message": "Daten-Uploads sind deaktiviert."
+  },
+  "status_last_sent": {
+    "message": "Letzter Bericht gesendet: "
+  },
+  "status_last_error": {
+    "message": "Letzter Fehler: "
+  },
+  "timeouts_title": {
+    "message": "Timeouts"
+  },
+  "timeouts_title_ms": {
+    "message": "Timeouts (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Zwischen Kachelschritten"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Dynamisches Einblenden → Klick"
+  },
+  "timeout_verify": {
+    "message": "Letzter Klick → Bestätigen"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "Jedem Timeout werden zufällig 0–300 ms hinzugefügt. Das dynamische Einblenden zählt die bereits verstrichene Erkennungszeit mit."
   }
 }

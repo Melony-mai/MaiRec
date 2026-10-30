@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Abrir MaiRec"
+  },
+  "language": {
+    "message": "Idioma"
+  },
+  "solver_enabled": {
+    "message": "Solucionador activado"
+  },
+  "recaptcha_support": {
+    "message": "Soporte para reCAPTCHA"
+  },
+  "autoclick_buttons": {
+    "message": "Hacer clic automático en botones"
+  },
+  "solve_images": {
+    "message": "Resolver desafíos de imágenes"
+  },
+  "ws_mode": {
+    "message": "Modo WS"
+  },
+  "ws_mode_tooltip": {
+    "message": "Requiere una clave de API de 32 caracteres"
+  },
+  "help_local_models": {
+    "message": "Los modelos se ejecutan localmente, no se envían datos al exterior."
+  },
+  "btn_timeouts": {
+    "message": "Tiempos de espera"
+  },
+  "btn_reports": {
+    "message": "Informes"
+  },
+  "visit_website": {
+    "message": "Visitar captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Atrás"
+  },
+  "reports_title": {
+    "message": "Informes"
+  },
+  "enable_reports": {
+    "message": "Habilitar informes (desactivado)"
+  },
+  "rep_key_label_16": {
+    "message": "Clave API (16 caracteres)"
+  },
+  "rep_key_label_16_32": {
+    "message": "Clave API (16 o 32 caracteres)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Enviar informes"
+  },
+  "status_uploads_disabled": {
+    "message": "La subida de datos está deshabilitada."
+  },
+  "status_last_sent": {
+    "message": "Último informe enviado: "
+  },
+  "status_last_error": {
+    "message": "Último error: "
+  },
+  "timeouts_title": {
+    "message": "Tiempos de espera"
+  },
+  "timeouts_title_ms": {
+    "message": "Tiempos de espera (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Entre clics de casilla"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Aparición dinámica → clic"
+  },
+  "timeout_verify": {
+    "message": "Último clic → verificar"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "Se añade un tiempo aleatorio de 0–300 ms a cada tiempo de espera. La aparición dinámica cuenta el tiempo de reconocimiento ya empleado."
   }
 }

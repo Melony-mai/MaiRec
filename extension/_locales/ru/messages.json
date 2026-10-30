@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Открыть MaiRec"
+  },
+  "language": {
+    "message": "Язык"
+  },
+  "solver_enabled": {
+    "message": "Решатель включен"
+  },
+  "recaptcha_support": {
+    "message": "Поддержка reCAPTCHA"
+  },
+  "autoclick_buttons": {
+    "message": "Автоклик по кнопкам"
+  },
+  "solve_images": {
+    "message": "Решать графические задачи"
+  },
+  "ws_mode": {
+    "message": "Режим WS"
+  },
+  "ws_mode_tooltip": {
+    "message": "Требуется 32-значный API-ключ"
+  },
+  "help_local_models": {
+    "message": "Модели работают локально, данные не отправляются наружу."
+  },
+  "btn_timeouts": {
+    "message": "Таймауты"
+  },
+  "btn_reports": {
+    "message": "Отчеты"
+  },
+  "visit_website": {
+    "message": "Посетить captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Назад"
+  },
+  "reports_title": {
+    "message": "Отчеты"
+  },
+  "enable_reports": {
+    "message": "Включить отчеты (отключено)"
+  },
+  "rep_key_label_16": {
+    "message": "API-ключ (16 символов)"
+  },
+  "rep_key_label_16_32": {
+    "message": "API-ключ (16 или 32 символа)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Отправить отчеты"
+  },
+  "status_uploads_disabled": {
+    "message": "Загрузка данных отключена."
+  },
+  "status_last_sent": {
+    "message": "Последний отчет отправлен: "
+  },
+  "status_last_error": {
+    "message": "Последняя ошибка: "
+  },
+  "timeouts_title": {
+    "message": "Таймауты"
+  },
+  "timeouts_title_ms": {
+    "message": "Таймауты (мс)"
+  },
+  "timeout_between_clicks": {
+    "message": "Между кликами по плиткам"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Динамическое появление → клик"
+  },
+  "timeout_verify": {
+    "message": "Последний клик → проверка"
+  },
+  "unit_ms": {
+    "message": "мс"
+  },
+  "help_timeouts": {
+    "message": "К каждому таймауту случайно добавляется 0–300 мс. Динамическое появление учитывает уже затраченное время распознавания."
   }
 }

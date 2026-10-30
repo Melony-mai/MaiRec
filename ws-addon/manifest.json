@@ -1,6 +1,6 @@
 {
   "name": "MaiRec",
-  "version": "1.36.46.151",
+  "version": "1.1",
   "description": "Automatically solves ReCaptcha images using a built-in neural network. Completely free. No registration or key purchase required.",
   "default_locale": "en",
   "web_accessible_resources": [
@@ -91,5 +91,5 @@
     "*://*.recaptcha.net/recaptcha/*",
     "<all_urls>"
   ],
-  "version_name": "1.36.46.151"
+  "version_name": "1.1"
 }

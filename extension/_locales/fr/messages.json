@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Ouvrir MaiRec"
+  },
+  "language": {
+    "message": "Langue"
+  },
+  "solver_enabled": {
+    "message": "Solveur activé"
+  },
+  "recaptcha_support": {
+    "message": "Prise en charge de reCAPTCHA"
+  },
+  "autoclick_buttons": {
+    "message": "Clic automatique sur les boutons"
+  },
+  "solve_images": {
+    "message": "Résoudre les défis d'images"
+  },
+  "ws_mode": {
+    "message": "Mode WS"
+  },
+  "ws_mode_tooltip": {
+    "message": "Nécessite une clé API de 32 caractères"
+  },
+  "help_local_models": {
+    "message": "Les modèles fonctionnent localement, aucune donnée n'est envoyée à l'extérieur."
+  },
+  "btn_timeouts": {
+    "message": "Délais"
+  },
+  "btn_reports": {
+    "message": "Rapports"
+  },
+  "visit_website": {
+    "message": "Visiter captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Retour"
+  },
+  "reports_title": {
+    "message": "Rapports"
+  },
+  "enable_reports": {
+    "message": "Activer les rapports (désactivé)"
+  },
+  "rep_key_label_16": {
+    "message": "Clé API (16 caractères)"
+  },
+  "rep_key_label_16_32": {
+    "message": "Clé API (16 ou 32 caractères)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Envoyer les rapports"
+  },
+  "status_uploads_disabled": {
+    "message": "Les téléversements de données sont désactivés."
+  },
+  "status_last_sent": {
+    "message": "Dernier rapport envoyé : "
+  },
+  "status_last_error": {
+    "message": "Dernière erreur : "
+  },
+  "timeouts_title": {
+    "message": "Délais"
+  },
+  "timeouts_title_ms": {
+    "message": "Délais (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Entre les clics sur les tuiles"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Révélation dynamique → clic"
+  },
+  "timeout_verify": {
+    "message": "Dernier clic → vérifier"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "Un délai aléatoire de 0 à 300 ms est ajouté à chaque délai. La révélation dynamique prend en compte le temps de reconnaissance déjà écoulé."
   }
 }

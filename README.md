@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#features"><img src="https://img.shields.io/badge/version-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -252,6 +253,7 @@ captchaplugin-main/
 │   ├── popup.html                  # Extension popup user interface
 │   ├── popup.js                    # Popup state manager and settings controller
 │   ├── popup.css                   # Modern dark-theme styling
+│   ├── i18n.js                     # Internationalization module & language manager
 │   ├── reports.html                # Standalone reporting / API key interface
 │   ├── reports.js                  # Reports controller
 │   ├── _locales/                   # I18n resource directories (11 languages)
@@ -371,6 +373,7 @@ Click on the extension icon in your browser toolbar to open the settings panel:
 
 | Option | Default | Description |
 |---|---|---|
+| **Language** | `English` | Manually select UI language across 11 supported languages (English, Arabic, German, Spanish, French, Indonesian, Japanese, Malay, Portuguese, Russian, Simplified Chinese). |
 | **Solver enabled** | `On` | Global master toggle for all extension solving features. |
 | **reCAPTCHA support** | `On` | Enables or disables interception of Google reCAPTCHA challenges. |
 | **Auto-click buttons** | `On` | Automatically clicks the "I'm not a robot" checkbox when detected. |

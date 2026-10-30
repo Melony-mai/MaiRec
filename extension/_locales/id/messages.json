@@ -7,5 +7,89 @@
   },
   "actionTitle": {
     "message": "Buka MaiRec"
+  },
+  "language": {
+    "message": "Bahasa"
+  },
+  "solver_enabled": {
+    "message": "Pemecah diaktifkan"
+  },
+  "recaptcha_support": {
+    "message": "Dukungan reCAPTCHA"
+  },
+  "autoclick_buttons": {
+    "message": "Klik tombol otomatis"
+  },
+  "solve_images": {
+    "message": "Selesaikan tantangan gambar"
+  },
+  "ws_mode": {
+    "message": "Mode WS"
+  },
+  "ws_mode_tooltip": {
+    "message": "Memerlukan kunci API 32 karakter"
+  },
+  "help_local_models": {
+    "message": "Model berjalan secara lokal, tidak ada data yang dikirim ke luar."
+  },
+  "btn_timeouts": {
+    "message": "Batas Waktu"
+  },
+  "btn_reports": {
+    "message": "Laporan"
+  },
+  "visit_website": {
+    "message": "Kunjungi captchaplugin.com"
+  },
+  "btn_back": {
+    "message": "← Kembali"
+  },
+  "reports_title": {
+    "message": "Laporan"
+  },
+  "enable_reports": {
+    "message": "Aktifkan laporan (dinonaktifkan)"
+  },
+  "rep_key_label_16": {
+    "message": "Kunci API (16 karakter)"
+  },
+  "rep_key_label_16_32": {
+    "message": "Kunci API (16 atau 32 karakter)"
+  },
+  "rep_key_placeholder": {
+    "message": "secretkey0123456"
+  },
+  "btn_send_reports": {
+    "message": "Kirim laporan"
+  },
+  "status_uploads_disabled": {
+    "message": "Unggahan data dinonaktifkan."
+  },
+  "status_last_sent": {
+    "message": "Laporan terakhir terkirim: "
+  },
+  "status_last_error": {
+    "message": "Kesalahan terakhir: "
+  },
+  "timeouts_title": {
+    "message": "Batas Waktu"
+  },
+  "timeouts_title_ms": {
+    "message": "Batas Waktu (ms)"
+  },
+  "timeout_between_clicks": {
+    "message": "Antara klik ubin"
+  },
+  "timeout_dynamic_reveal": {
+    "message": "Kemunculan dinamis → klik"
+  },
+  "timeout_verify": {
+    "message": "Klik terakhir → verifikasi"
+  },
+  "unit_ms": {
+    "message": "ms"
+  },
+  "help_timeouts": {
+    "message": "Acak 0–300 md ditambahkan ke setiap batas waktu. Kemunculan dinamis menghitung waktu pengenalan yang telah digunakan."
   }
 }

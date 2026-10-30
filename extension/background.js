@@ -69,6 +69,7 @@ importScripts(chrome.runtime.getURL('background_sqlite.js'));
         recaptcha_delay_between_clicks: 300,
         recaptcha_delay_dynamic_reveal: 850,
         recaptcha_delay_before_verify: 850,
+        language: "en"
     };
     var v = i.action,
         R = !0;

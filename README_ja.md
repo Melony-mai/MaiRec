@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技術アーキテクチャと内部構造"><img src="https://img.shields.io/badge/推論エンジン-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -251,6 +252,7 @@ captchaplugin-main/
 │   ├── popup.html                  # ポップアップ設定UI
 │   ├── popup.js                    # ポップアップ制御ロジック
 │   ├── popup.css                   # ダークテーマスタイルシート
+│   ├── i18n.js                     # 国際化言語マネージャー＆多言語翻訳定義
 │   ├── reports.html                # レポート／API Key 設定UI
 │   ├── reports.js                  # レポート設定ロジック
 │   ├── _locales/                   # 11言語対応の国際化リソース
@@ -369,6 +371,7 @@ captchaplugin-main/
 
 | 項目 | デフォルト | 説明 |
 |---|---|---|
+| **Language** | `English` | 拡張機能のUI言語を手動選択（英語、アラビア語、ドイツ語、スペイン語、フランス語、インドネシア語、日本語、マレー語、ポルトガル語、ロシア語、簡体字中国語の11言語対応）。 |
 | **Solver enabled** | `ON` | 拡張機能全体のマスター有効/無効スイッチ。 |
 | **reCAPTCHA support** | `ON` | Google reCAPTCHA 認証の自動検知と解決の有効化。 |
 | **Auto-click buttons** | `ON` | チェックボックスを検出した際、「私はロボットではありません」を自動クリック。 |

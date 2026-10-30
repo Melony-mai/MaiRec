@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Reports</title>
+  <title data-i18n="reports_title">Reports</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <section class="card">
-    <h2>Reports</h2>
+    <h2 data-i18n="reports_title">Reports</h2>
     <hr class="divider">
     <div class="reports-grid">
-      <span>Enable reports (disabled)</span>
+      <span data-i18n="enable_reports">Enable reports (disabled)</span>
       <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
 
-      <span>API key (16 or 32 chars)</span>
+      <span id="rep_key_label" data-i18n="rep_key_label_16_32">API key (16 or 32 chars)</span>
       <input type="text" id="rep_key" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456">
 
-      <button id="rep_send" class="btn full">Send reports</button>
+      <button id="rep_send" class="btn full" data-i18n="btn_send_reports">Send reports</button>
       <span id="rep_status" class="small status full"></span>
     </div>
   </section>
@@ -24,4 +24,3 @@
   <script type="module" src="reports.js"></script>
 </body>
 </html>
-

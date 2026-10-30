@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技术架构与实现原理"><img src="https://img.shields.io/badge/推理引擎-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -251,6 +252,7 @@ captchaplugin-main/
 │   ├── popup.html                  # 扩展弹窗设置界面
 │   ├── popup.js                    # 弹窗交互与状态绑定逻辑
 │   ├── popup.css                   # 弹窗暗黑样式表
+│   ├── i18n.js                     # 国际化语言管理器与多语言翻译包
 │   ├── reports.html                # 独立上报/API Key 配置页面
 │   ├── reports.js                  # 独立上报页面逻辑
 │   ├── _locales/                   # 多语言国际化资源包（支持 11 国语言）
@@ -369,6 +371,7 @@ captchaplugin-main/
 
 | 配置选项 | 默认状态 | 详细说明 |
 |---|---|---|
+| **Language** | `English` | 手动切换扩展界面语言（支持英语、阿拉伯语、德语、西班牙语、法语、印尼语、日语、马来语、葡萄牙语、俄语、简体中文 11 国语言）。 |
 | **Solver enabled** | `开启` | 扩展总开关，关闭后停止所有自动化拦截与求解行为。 |
 | **reCAPTCHA support** | `开启` | 是否启用对 Google reCAPTCHA 挑战的识别支持。 |
 | **Auto-click buttons** | `开启` | 检测到复选框时是否自动模拟点击“我不是机器人”。 |
