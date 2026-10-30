@@ -475,7 +475,7 @@ npm run sync:server
 ```
 
 **Key Safety Guarantees & UI Features:**
-- **In-Popup One-Click Update & Status**: Click the "Check for Updates" button next to the version badge in the popup header to check GitHub in real time. When updates are available, the button highlights as "Update Now" to synchronize directly, displaying clear status indicators (`Up to date`, `Checking...`, `Update available`, or `Update failed`).
+- **In-Popup One-Click Update & Status**: Click the "Check for Updates" button next to the version badge in the popup header to check GitHub in real time. When updates are available, the button highlights as "Update Now" to synchronize directly, displaying clear status indicators (`Up to date`, `Checking...`, `Update available`, or `Update failed`). The local synchronization bridge service starts automatically on demand without requiring manual terminal commands.
 - **Zero Work Loss**: Uncommitted modifications, staged files, and untracked files are automatically detected and safely preserved in Git stash before any remote changes are integrated.
 - **Direct Remote Iteration**: Automatically fetches and merges latest upstream commits directly into your local working branch.
 - **Safe Merge Conflict Handling**: If conflicts occur between incoming remote changes and local edits, MaiRec halts safely without clobbering files, preserves all work, and clearly reports conflicted files with actionable guidance.

@@ -10,6 +10,7 @@
     "sync:check": "node scripts/sync.mjs --check",
     "sync:server": "node scripts/sync.mjs --serve",
     "sync:serve": "node scripts/sync.mjs --serve",
+    "postinstall": "node scripts/register_native_bridge.mjs",
     "test": "node test/test_layout_and_functionality.mjs && node test/test_resolution_layout.mjs && node test/test_i18n.mjs && node test/test_theme.mjs && node test/test_sync_iteration.mjs && node test/test_popup_update_sync.mjs",
     "test:quick": "node test/test_layout_and_functionality.mjs && node test/test_i18n.mjs && node test/test_sync_iteration.mjs && node test/test_popup_update_sync.mjs",
     "test:sync": "node test/test_sync_iteration.mjs && node test/test_popup_update_sync.mjs",

@@ -7,12 +7,15 @@ import {
   checkUpdates,
   synchronizeProject,
   formatStatusMessage,
+  ensureSyncBridgeRunning,
   DEFAULT_SYNC_SERVER_URL
 } from '../extension/sync.js';
 import {
   startSyncServer,
   syncRepository,
-  getWorkingTreeStatus
+  getWorkingTreeStatus,
+  registerNativeMessagingHost,
+  checkServerHealth
 } from '../scripts/sync.mjs';
 import { translations, getMessage } from '../extension/i18n.js';
 
@@ -416,6 +419,7 @@ async function main() {
   // 5. Test Live Popup Rendering & User Interaction in Chrome via CDP
   await runTest('Verify Popup UI interaction, button state, and responsive layout in headless Chromium', async () => {
     const testProfile = '/tmp/test-profile-popup-sync-' + Date.now();
+    registerNativeMessagingHost({ profileDir: testProfile });
     const chrome = spawn(CHROME_PATH, [
       '--headless=new',
       '--remote-debugging-port=9244',
@@ -600,6 +604,346 @@ async function main() {
     } finally {
       chrome.kill();
       try { fs.rmSync(testProfile, { recursive: true, force: true }); } catch (_) {}
+    }
+  });
+
+  // 6. Test Automatic Sync Bridge Startup when Initially Stopped (API Layer)
+  await runTest('Verify sync bridge auto-starts automatically when initially stopped (API Layer)', async () => {
+    const autoPort = 38900 + Math.floor(Math.random() * 50);
+    const autoServerUrl = `http://127.0.0.1:${autoPort}`;
+    const sandboxDir = path.join('/tmp', `mairec-autostart-test-${Date.now()}`);
+    fs.mkdirSync(sandboxDir, { recursive: true });
+
+    spawnSync('pkill', ['-f', `sync.mjs --serve --port ${autoPort}`]);
+
+    try {
+      const remoteBare = path.join(sandboxDir, 'remote.git');
+      const localClient = path.join(sandboxDir, 'local');
+
+      execSync(`git init --bare "${remoteBare}"`);
+      execSync(`git --git-dir="${remoteBare}" symbolic-ref HEAD refs/heads/main`);
+
+      const tmpInit = path.join(sandboxDir, 'tmp_init');
+      fs.mkdirSync(tmpInit, { recursive: true });
+      execSync('git init -b main', { cwd: tmpInit });
+      execSync('git config user.email "ci@mairec.ai"', { cwd: tmpInit });
+      execSync('git config user.name "MaiRec CI"', { cwd: tmpInit });
+      fs.writeFileSync(path.join(tmpInit, 'README.md'), '# Init');
+      execSync('git add .', { cwd: tmpInit });
+      execSync('git commit -m "init"', { cwd: tmpInit });
+      execSync(`git remote add origin "${remoteBare}"`, { cwd: tmpInit });
+      execSync('git push -u origin main', { cwd: tmpInit });
+
+      execSync(`git clone "${remoteBare}" "${localClient}"`);
+      execSync('git config user.email "local@mairec.ai"', { cwd: localClient });
+      execSync('git config user.name "Local Dev"', { cwd: localClient });
+
+      // Verify initially stopped
+      const initiallyAlive = await checkServerHealth(autoServerUrl, 250);
+      if (initiallyAlive) {
+        throw new Error(`Port ${autoPort} should be stopped before test`);
+      }
+
+      // Call ensureSyncBridgeRunning with auto-start
+      const started = await ensureSyncBridgeRunning({
+        serverUrl: autoServerUrl,
+        cwd: localClient,
+        timeoutMs: 4000
+      });
+
+      if (!started) {
+        throw new Error('ensureSyncBridgeRunning failed to auto-start bridge server');
+      }
+
+      const nowAlive = await checkServerHealth(autoServerUrl, 300);
+      if (!nowAlive) {
+        throw new Error('Server health check failed after auto-start');
+      }
+
+      // Perform checkUpdates through the auto-started server
+      const checkRes = await checkUpdates({
+        serverUrl: autoServerUrl,
+        timeoutMs: 5000
+      });
+
+      if (checkRes.status !== 'up_to_date' && checkRes.status !== 'update_available') {
+        throw new Error(`Expected up_to_date or update_available, got: ${checkRes.status}`);
+      }
+      if (checkRes.source !== 'local_git') {
+        throw new Error(`Expected source 'local_git', got: ${checkRes.source}`);
+      }
+    } finally {
+      spawnSync('pkill', ['-f', `sync.mjs --serve --port ${autoPort}`]);
+      try { fs.rmSync(sandboxDir, { recursive: true, force: true }); } catch (_) {}
+    }
+  });
+
+  // 7. Test Chrome Native Messaging Host stdio protocol & commands
+  await runTest('Verify Chrome Native Messaging Host protocol, stdio framing, and commands', async () => {
+    const bridgeScript = path.join(PROJECT_ROOT, 'scripts/native_bridge.sh');
+    const child = spawn('bash', [bridgeScript], {
+      cwd: PROJECT_ROOT,
+      stdio: ['pipe', 'pipe', 'inherit']
+    });
+
+    try {
+      function sendNM(msg) {
+        const payload = Buffer.from(JSON.stringify(msg), 'utf8');
+        const header = Buffer.alloc(4);
+        header.writeUInt32LE(payload.length, 0);
+        child.stdin.write(header);
+        child.stdin.write(payload);
+      }
+
+      function readNMResponse() {
+        return new Promise((resolve, reject) => {
+          let buffer = Buffer.alloc(0);
+          const onData = (chunk) => {
+            buffer = Buffer.concat([buffer, chunk]);
+            if (buffer.length >= 4) {
+              const len = buffer.readUInt32LE(0);
+              if (buffer.length >= 4 + len) {
+                child.stdout.removeListener('data', onData);
+                const msg = JSON.parse(buffer.subarray(4, 4 + len).toString('utf8'));
+                resolve(msg);
+              }
+            }
+          };
+          child.stdout.on('data', onData);
+          setTimeout(() => reject(new Error('NM response timeout')), 5000);
+        });
+      }
+
+      // Test 7a: ping
+      sendNM({ action: 'ping' });
+      const pingRes = await readNMResponse();
+      if (!pingRes.ok || !pingRes.pong) {
+        throw new Error(`Unexpected ping response: ${JSON.stringify(pingRes)}`);
+      }
+
+      // Test 7b: status
+      sendNM({ action: 'status' });
+      const statusRes = await readNMResponse();
+      if (!statusRes.ok || !statusRes.branch) {
+        throw new Error(`Unexpected status response: ${JSON.stringify(statusRes)}`);
+      }
+
+      // Test 7c: start
+      sendNM({ action: 'start', port: 38896 });
+      const startRes = await readNMResponse();
+      if (!startRes.ok) {
+        throw new Error(`Unexpected start response: ${JSON.stringify(startRes)}`);
+      }
+      const isAlive = await checkServerHealth('http://127.0.0.1:38896', 500);
+      if (!isAlive) {
+        throw new Error('Server on 38896 was not alive after NM start');
+      }
+
+      spawnSync('pkill', ['-f', 'sync.mjs --serve --port 38896']);
+    } finally {
+      child.kill();
+    }
+  });
+
+  // 8. Test In-Browser Manual Update with Initially Stopped Sync Bridge (CDP Full E2E)
+  await runTest('Verify in-browser manual update and synchronization in Chromium with initially stopped sync bridge', async () => {
+    const e2eDir = path.join('/tmp', `mairec-e2e-sync-${Date.now()}`);
+    fs.mkdirSync(e2eDir, { recursive: true });
+
+    const remoteBare = path.join(e2eDir, 'remote.git');
+    const upstreamWorking = path.join(e2eDir, 'upstream');
+    const localClient = path.join(e2eDir, 'local');
+
+    // 1. Initialize bare remote
+    execSync(`git init --bare "${remoteBare}"`);
+    execSync(`git --git-dir="${remoteBare}" symbolic-ref HEAD refs/heads/main`);
+
+    // 2. Initialize upstream working directory
+    fs.mkdirSync(upstreamWorking, { recursive: true });
+    execSync('git init -b main', { cwd: upstreamWorking });
+    execSync('git config user.email "ci@mairec.ai"', { cwd: upstreamWorking });
+    execSync('git config user.name "MaiRec CI"', { cwd: upstreamWorking });
+
+    execSync(`cp -r "${EXT_PATH}" "${upstreamWorking}/"`);
+    execSync(`cp -r "${path.join(PROJECT_ROOT, 'scripts')}" "${upstreamWorking}/"`);
+    fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
+    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
+
+    execSync('git add .', { cwd: upstreamWorking });
+    execSync('git commit -m "feat: initial commit for e2e"', { cwd: upstreamWorking });
+    execSync(`git remote add origin "${remoteBare}"`, { cwd: upstreamWorking });
+    execSync('git push -u origin main', { cwd: upstreamWorking });
+
+    // 3. Clone to localClient
+    execSync(`git clone "${remoteBare}" "${localClient}"`);
+    execSync('git config user.email "local@mairec.ai"', { cwd: localClient });
+    execSync('git config user.name "Local Dev"', { cwd: localClient });
+
+    // 4. Add upstream commit so update is available
+    fs.writeFileSync(path.join(upstreamWorking, 'new_ai_weights.bin'), 'mock weights v2 content');
+    execSync('git add new_ai_weights.bin', { cwd: upstreamWorking });
+    execSync('git commit -m "feat: new AI weights released"', { cwd: upstreamWorking });
+    execSync('git push origin main', { cwd: upstreamWorking });
+
+    // 5. Add local uncommitted work to verify work preservation
+    fs.writeFileSync(path.join(localClient, 'my_local_notes.txt'), 'valuable local notes in progress');
+
+    // 6. Ensure sync bridge is initially stopped
+    spawnSync('pkill', ['-f', 'sync.mjs --serve']);
+
+    const e2eProfile = path.join(e2eDir, 'profile');
+    const extClientPath = path.join(localClient, 'extension');
+
+    const chrome = spawn(CHROME_PATH, [
+      '--headless=new',
+      '--remote-debugging-port=9250',
+      '--no-sandbox',
+      '--disable-gpu',
+      '--disable-extensions-except=' + extClientPath,
+      '--load-extension=' + extClientPath,
+      '--user-data-dir=' + e2eProfile
+    ]);
+
+    try {
+      while (true) {
+        try {
+          await fetch('http://127.0.0.1:9250/json/version');
+          break;
+        } catch {
+          await new Promise(r => setTimeout(r, 50));
+        }
+      }
+
+      let extId = null;
+      for (let i = 0; i < 30; i++) {
+        try {
+          const list = await (await fetch('http://127.0.0.1:9250/json/list')).json();
+          const sw = list.find(t => t.url && t.url.includes('background.js'));
+          if (sw) {
+            extId = sw.url.split('/')[2];
+            break;
+          }
+        } catch (_) {}
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      if (!extId) throw new Error('Extension failed to load in Chromium');
+
+      // Register native messaging host with the extension ID and localClient (profile isolated)
+      registerNativeMessagingHost({
+        cwd: localClient,
+        scriptPath: path.join(localClient, 'scripts/native_bridge.sh'),
+        extensionId: extId,
+        profileDir: e2eProfile,
+        profileOnly: true
+      });
+
+      const popupTarget = await (await fetch(`http://127.0.0.1:9250/json/new?chrome-extension://${extId}/popup.html`, { method: 'PUT' })).json();
+      const ws = new WebSocket(popupTarget.webSocketDebuggerUrl);
+      await new Promise(r => ws.onopen = r);
+      await new Promise(r => setTimeout(r, 300));
+
+      let msgId = 1;
+      function send(method, params = {}) {
+        return new Promise((resolve, reject) => {
+          const id = msgId++;
+          const handler = (evt) => {
+            const msg = JSON.parse(evt.data);
+            if (msg.id === id) {
+              ws.removeEventListener('message', handler);
+              if (msg.error) reject(new Error(msg.error.message));
+              else resolve(msg.result);
+            }
+          };
+          ws.addEventListener('message', handler);
+          ws.send(JSON.stringify({ id, method, params }));
+        });
+      }
+
+      await send('Page.enable');
+      await send('Runtime.enable');
+
+      // Step 8a: Click "Check for Updates" with bridge initially stopped
+      await send('Runtime.evaluate', { expression: `document.getElementById('check_update_btn').click()` });
+
+      let updateAvailableState = null;
+      for (let i = 0; i < 50; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        const res = (await send('Runtime.evaluate', {
+          expression: `(() => {
+            const btn = document.getElementById('check_update_btn');
+            const statusEl = document.getElementById('update_status');
+            const statusText = document.getElementById('update_status_text');
+            const btnText = document.getElementById('update_btn_text');
+            return {
+              btnText: btnText?.textContent.trim(),
+              isLoading: btn?.classList.contains('is-loading'),
+              statusClasses: statusEl?.className,
+              statusText: statusText?.textContent.trim()
+            };
+          })()`,
+          returnByValue: true
+        })).result.value;
+
+        if (!res.isLoading && res.statusClasses.includes('status-available')) {
+          updateAvailableState = res;
+          break;
+        }
+      }
+
+      if (!updateAvailableState) {
+        throw new Error('Update available state was not reached when bridge auto-started');
+      }
+
+      // Step 8b: Click manual update button ("Update Now" / "立即更新")
+      await send('Runtime.evaluate', { expression: `document.getElementById('check_update_btn').click()` });
+
+      let postSyncState = null;
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 300));
+        const res = (await send('Runtime.evaluate', {
+          expression: `(() => {
+            const btn = document.getElementById('check_update_btn');
+            const statusEl = document.getElementById('update_status');
+            const statusText = document.getElementById('update_status_text');
+            const btnText = document.getElementById('update_btn_text');
+            return {
+              btnText: btnText?.textContent.trim(),
+              isLoading: btn?.classList.contains('is-loading'),
+              statusClasses: statusEl?.className,
+              statusText: statusText?.textContent.trim()
+            };
+          })()`,
+          returnByValue: true
+        })).result.value;
+
+        if (!res.isLoading && res.statusClasses.includes('status-up-to-date')) {
+          postSyncState = res;
+          break;
+        }
+      }
+
+      if (!postSyncState) {
+        throw new Error('Up-to-date state was not reached after update click');
+      }
+
+      // Step 8c: Verify incoming changes were synchronized to disk
+      const syncedFile = path.join(localClient, 'new_ai_weights.bin');
+      if (!fs.existsSync(syncedFile)) {
+        throw new Error('File new_ai_weights.bin was not found on local disk after synchronization');
+      }
+
+      // Step 8d: Verify local uncommitted work was preserved
+      const notesFile = path.join(localClient, 'my_local_notes.txt');
+      if (!fs.existsSync(notesFile) || fs.readFileSync(notesFile, 'utf8') !== 'valuable local notes in progress') {
+        throw new Error('Local uncommitted notes were not preserved during synchronization');
+      }
+
+      ws.close();
+    } finally {
+      chrome.kill();
+      try { fs.rmSync(e2eDir, { recursive: true, force: true }); } catch (_) {}
+      spawnSync('pkill', ['-f', 'sync.mjs --serve']);
     }
   });
 

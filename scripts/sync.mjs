@@ -14,10 +14,11 @@
  *  - Executes post-sync health checks and automated test suites to ensure functionality.
  */
 
-import { spawnSync, execSync } from 'child_process';
+import { spawn, spawnSync, execSync } from 'child_process';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,6 +96,8 @@ function parseArgs(argv) {
     strategy: 'merge', // 'merge', 'rebase', 'ff-only'
     checkOnly: false,
     serve: false,
+    native: false,
+    registerHost: false,
     port: 38888,
     skipTests: false,
     skipStash: false,
@@ -109,6 +112,10 @@ function parseArgs(argv) {
       options.help = true;
     } else if (arg === '--check' || arg === '--status' || arg === '--dry-run') {
       options.checkOnly = true;
+    } else if (arg === '--native' || arg === '-n') {
+      options.native = true;
+    } else if (arg === '--register-host' || arg === '--install-host') {
+      options.registerHost = true;
     } else if ((arg === '--serve' || arg === '-s') && i + 1 < argv.length && /^\d+$/.test(argv[i + 1])) {
       options.serve = true;
       options.port = parseInt(argv[++i], 10);
@@ -503,7 +510,7 @@ export async function syncRepository(options = {}) {
   }
 
   let stashInfo = null;
-  if (!initialStatus.isClean && !options.skipStash) {
+  if (!options.checkOnly && !initialStatus.isClean && !options.skipStash) {
     const totalFiles = initialStatus.trackedModified.length + initialStatus.untracked.length;
     logInfo(`Detected ${totalFiles} uncommitted file(s) (${initialStatus.trackedModified.length} modified, ${initialStatus.untracked.length} untracked).`);
     stashInfo = preserveLocalWork(cwd);
@@ -665,6 +672,221 @@ export async function syncRepository(options = {}) {
 }
 
 /**
+ * Probe local sync server health endpoint
+ */
+export async function checkServerHealth(url = 'http://127.0.0.1:38888', timeoutMs = 500) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const healthUrl = url.endsWith('/health') ? url : `${url.replace(/\/+$/, '')}/health`;
+    const res = await fetch(healthUrl, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!(data && data.ok);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Register Chrome / Chromium Native Messaging Host manifest
+ */
+export function registerNativeMessagingHost(options = {}) {
+  const hostName = 'com.mairec.sync_bridge';
+  const scriptPath = options.scriptPath || (options.cwd ? path.join(options.cwd, 'scripts/native_bridge.sh') : path.join(PROJECT_ROOT, 'scripts/native_bridge.sh'));
+
+  try {
+    if (fs.existsSync(scriptPath)) {
+      fs.chmodSync(scriptPath, 0o755);
+    }
+  } catch (_) {}
+
+  const allowedOrigins = new Set([
+    'chrome-extension://hckjfgjjinombhcffkojdneimkdcggml/',
+    ...(options.allowedOrigins || [])
+  ]);
+
+  if (options.extensionId) {
+    allowedOrigins.add(`chrome-extension://${options.extensionId}/`);
+  }
+
+  const manifest = {
+    name: hostName,
+    description: 'MaiRec Local Synchronization Bridge Native Host',
+    path: scriptPath,
+    type: 'stdio',
+    allowed_origins: Array.from(allowedOrigins)
+  };
+
+  const manifestContent = JSON.stringify(manifest, null, 2);
+  const registeredPaths = [];
+  const candidateDirs = [];
+
+  if (options.profileDir) {
+    candidateDirs.push(path.join(options.profileDir, 'NativeMessagingHosts'));
+  }
+
+  if (!options.profileOnly) {
+    const home = os.homedir();
+    if (home) {
+      candidateDirs.push(
+        path.join(home, '.config/google-chrome/NativeMessagingHosts'),
+        path.join(home, '.config/chromium/NativeMessagingHosts'),
+        path.join(home, '.config/google-chrome-for-testing/NativeMessagingHosts'),
+        path.join(home, '.mozilla/native-messaging-hosts')
+      );
+    }
+  }
+
+  for (const dir of candidateDirs) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      const targetFile = path.join(dir, `${hostName}.json`);
+      fs.writeFileSync(targetFile, manifestContent, 'utf8');
+      registeredPaths.push(targetFile);
+    } catch (_) {}
+  }
+
+  return { success: registeredPaths.length > 0, registeredPaths };
+}
+
+/**
+ * Run Chrome Native Messaging Host (stdio protocol)
+ */
+export async function runNativeMessagingHost(options = {}) {
+  const cwd = options.cwd || PROJECT_ROOT;
+  const defaultPort = options.port || 38888;
+
+  function sendNativeMessage(obj) {
+    const payload = Buffer.from(JSON.stringify(obj), 'utf8');
+    const header = Buffer.alloc(4);
+    header.writeUInt32LE(payload.length, 0);
+    process.stdout.write(header);
+    process.stdout.write(payload);
+  }
+
+  let buffer = Buffer.alloc(0);
+
+  process.stdin.on('data', async (chunk) => {
+    buffer = Buffer.concat([buffer, chunk]);
+
+    while (buffer.length >= 4) {
+      const msgLen = buffer.readUInt32LE(0);
+      if (buffer.length < 4 + msgLen) {
+        break; // Wait for full packet
+      }
+
+      const msgBytes = buffer.subarray(4, 4 + msgLen);
+      buffer = buffer.subarray(4 + msgLen);
+
+      let msg = {};
+      try {
+        msg = JSON.parse(msgBytes.toString('utf8'));
+      } catch (err) {
+        sendNativeMessage({ ok: false, error: 'Invalid JSON: ' + err.message });
+        continue;
+      }
+
+      try {
+        const action = msg.action || msg.type || 'status';
+        const targetPort = msg.port || defaultPort;
+        const serverUrl = `http://127.0.0.1:${targetPort}`;
+
+        if (action === 'ping') {
+          sendNativeMessage({ ok: true, pong: true, time: Date.now() });
+        } else if (action === 'start') {
+          const isAlive = await checkServerHealth(serverUrl, 300);
+          if (isAlive) {
+            sendNativeMessage({ ok: true, status: 'already_running', port: targetPort, serverUrl });
+          } else {
+            const syncScript = path.join(cwd, 'scripts/sync.mjs');
+            const child = spawn(process.execPath, [syncScript, '--serve', '--port', String(targetPort), '--cwd', cwd], {
+              cwd,
+              detached: true,
+              stdio: 'ignore'
+            });
+            child.unref();
+
+            let ready = false;
+            for (let i = 0; i < 25; i++) {
+              await new Promise(r => setTimeout(r, 100));
+              if (await checkServerHealth(serverUrl, 250)) {
+                ready = true;
+                break;
+              }
+            }
+
+            sendNativeMessage({
+              ok: ready,
+              status: ready ? 'started' : 'timeout',
+              port: targetPort,
+              serverUrl,
+              pid: child.pid
+            });
+          }
+        } else if (action === 'check') {
+          const checkRes = await syncRepository({
+            cwd,
+            remote: msg.remote,
+            branch: msg.branch,
+            remoteUrl: msg.remoteUrl,
+            checkOnly: true,
+            skipTests: true
+          });
+          sendNativeMessage({
+            ok: checkRes.success,
+            success: checkRes.success,
+            relation: checkRes.relation,
+            localHead: checkRes.localHead,
+            remoteHead: checkRes.remoteHead,
+            updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT'
+          });
+        } else if (action === 'sync') {
+          const syncRes = await syncRepository({
+            cwd,
+            remote: msg.remote,
+            branch: msg.branch,
+            remoteUrl: msg.remoteUrl,
+            strategy: msg.strategy,
+            skipTests: msg.skipTests || false
+          });
+          sendNativeMessage({
+            ok: syncRes.success,
+            success: syncRes.success,
+            relation: syncRes.relation,
+            currentCommit: syncRes.currentCommit,
+            code: syncRes.code,
+            conflicts: syncRes.conflicts || [],
+            error: syncRes.error
+          });
+        } else if (action === 'status') {
+          const curBranch = getCurrentBranch(cwd);
+          const status = getWorkingTreeStatus(cwd);
+          const headRes = runGit(['rev-parse', 'HEAD'], { cwd });
+          sendNativeMessage({
+            ok: true,
+            branch: curBranch,
+            localHead: headRes.success ? headRes.stdout : '',
+            isClean: status.isClean,
+            uncommittedCount: status.trackedModified.length + status.untracked.length,
+            conflicted: status.conflictedFiles
+          });
+        } else {
+          sendNativeMessage({ ok: false, error: 'Unknown action: ' + action });
+        }
+      } catch (handlerErr) {
+        sendNativeMessage({ ok: false, error: handlerErr.message });
+      }
+    }
+  });
+
+  process.stdin.on('end', () => {
+    process.exit(0);
+  });
+}
+
+/**
  * Start a lightweight local synchronization bridge server
  * Allows the browser extension popup settings interface to directly query
  * git status and trigger safe repository updates.
@@ -676,97 +898,125 @@ export function startSyncServer(options = {}) {
   const branch = options.branch || '';
   const remoteUrl = options.remoteUrl || DEFAULT_REMOTE_URL;
 
-  const server = http.createServer(async (req, res) => {
-    // Enable CORS for Chrome Extension origins
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-      res.writeHead(204);
-      res.end();
-      return;
-    }
-
-    const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
-    const pathname = parsedUrl.pathname;
-
-    try {
-      if (req.method === 'GET' && (pathname === '/health' || pathname === '/status' || pathname === '/api/status')) {
-        const curBranch = getCurrentBranch(cwd);
-        const status = getWorkingTreeStatus(cwd);
-        const headRes = runGit(['rev-parse', 'HEAD'], { cwd });
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          ok: true,
-          branch: curBranch,
-          localHead: headRes.success ? headRes.stdout : '',
-          isClean: status.isClean,
-          uncommittedCount: status.trackedModified.length + status.untracked.length,
-          conflicted: status.conflictedFiles
-        }));
-        return;
-      }
-
-      if (req.method === 'POST' && (pathname === '/check' || pathname === '/api/check')) {
-        const checkRes = await syncRepository({
-          cwd,
-          remote,
-          branch,
-          remoteUrl,
-          checkOnly: true,
-          skipTests: true
-        });
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          ok: checkRes.success,
-          success: checkRes.success,
-          relation: checkRes.relation,
-          localHead: checkRes.localHead,
-          remoteHead: checkRes.remoteHead,
-          updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT'
-        }));
-        return;
-      }
-
-      if (req.method === 'POST' && (pathname === '/sync' || pathname === '/api/sync')) {
-        const syncRes = await syncRepository({
-          cwd,
-          remote,
-          branch,
-          remoteUrl,
-          strategy: options.strategy || 'merge',
-          skipTests: options.skipTests || false
-        });
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          ok: syncRes.success,
-          success: syncRes.success,
-          relation: syncRes.relation,
-          currentCommit: syncRes.currentCommit,
-          code: syncRes.code,
-          conflicts: syncRes.conflicts || [],
-          error: syncRes.error
-        }));
-        return;
-      }
-
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Endpoint not found' }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, success: false, error: err.message }));
-    }
-  });
-
   return new Promise((resolve, reject) => {
-    server.listen(port, '127.0.0.1', () => {
-      logSuccess(`Local synchronization bridge server active on http://127.0.0.1:${port}`);
-      resolve(server);
-    });
-    server.on('error', reject);
+    // Check if server is already running on this port
+    checkServerHealth(`http://127.0.0.1:${port}`, 300).then(isHealthy => {
+      if (isHealthy) {
+        logSuccess(`Local synchronization bridge server active on http://127.0.0.1:${port}`);
+        resolve({
+          close: (cb) => { if (cb) cb(); },
+          port,
+          alreadyRunning: true
+        });
+        return;
+      }
+
+      const server = http.createServer(async (req, res) => {
+        // Enable CORS for Chrome Extension origins
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+        if (req.method === 'OPTIONS') {
+          res.writeHead(204);
+          res.end();
+          return;
+        }
+
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+        const pathname = parsedUrl.pathname;
+
+        try {
+          if (req.method === 'GET' && (pathname === '/health' || pathname === '/status' || pathname === '/api/status')) {
+            const curBranch = getCurrentBranch(cwd);
+            const status = getWorkingTreeStatus(cwd);
+            const headRes = runGit(['rev-parse', 'HEAD'], { cwd });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: true,
+              branch: curBranch,
+              localHead: headRes.success ? headRes.stdout : '',
+              isClean: status.isClean,
+              uncommittedCount: status.trackedModified.length + status.untracked.length,
+              conflicted: status.conflictedFiles
+            }));
+            return;
+          }
+
+          if (req.method === 'POST' && (pathname === '/check' || pathname === '/api/check')) {
+            const checkRes = await syncRepository({
+              cwd,
+              remote,
+              branch,
+              remoteUrl,
+              checkOnly: true,
+              skipTests: true
+            });
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: checkRes.success,
+              success: checkRes.success,
+              relation: checkRes.relation,
+              localHead: checkRes.localHead,
+              remoteHead: checkRes.remoteHead,
+              updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT'
+            }));
+            return;
+          }
+
+          if (req.method === 'POST' && (pathname === '/sync' || pathname === '/api/sync')) {
+            const syncRes = await syncRepository({
+              cwd,
+              remote,
+              branch,
+              remoteUrl,
+              strategy: options.strategy || 'merge',
+              skipTests: options.skipTests || false
+            });
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: syncRes.success,
+              success: syncRes.success,
+              relation: syncRes.relation,
+              currentCommit: syncRes.currentCommit,
+              code: syncRes.code,
+              conflicts: syncRes.conflicts || [],
+              error: syncRes.error
+            }));
+            return;
+          }
+
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Endpoint not found' }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, success: false, error: err.message }));
+        }
+      });
+
+      server.listen(port, '127.0.0.1', () => {
+        logSuccess(`Local synchronization bridge server active on http://127.0.0.1:${port}`);
+        resolve(server);
+      });
+
+      server.on('error', async (err) => {
+        if (err.code === 'EADDRINUSE') {
+          const healthy = await checkServerHealth(`http://127.0.0.1:${port}`, 300);
+          if (healthy) {
+            logSuccess(`Local synchronization bridge server active on http://127.0.0.1:${port}`);
+            resolve({
+              close: (cb) => { if (cb) cb(); },
+              port,
+              alreadyRunning: true
+            });
+            return;
+          }
+        }
+        reject(err);
+      });
+    }).catch(reject);
   });
 }
 
@@ -779,7 +1029,27 @@ if (isDirectExecution) {
     process.exit(0);
   }
 
-  if (options.serve) {
+  // Ensure native messaging host is registered
+  try {
+    if (!options.cwd || path.resolve(options.cwd) === PROJECT_ROOT) {
+      registerNativeMessagingHost();
+    }
+  } catch (_) {}
+
+  if (options.registerHost) {
+    const reg = registerNativeMessagingHost(options);
+    if (reg.success) {
+      logSuccess(`Native messaging host registered at: ${reg.registeredPaths.join(', ')}`);
+      process.exit(0);
+    } else {
+      logError('Failed to register native messaging host');
+      process.exit(1);
+    }
+  }
+
+  if (options.native) {
+    runNativeMessagingHost(options);
+  } else if (options.serve) {
     startSyncServer(options)
       .catch(err => {
         logError(`Failed to start sync server: ${err.message}`);
