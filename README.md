@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <b>English</b> | <a href="README_zh-CN.md">简体中文</a> | <a href="README_ja.md">日本語</a>
+</p>
+
+<p align="center">
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -235,9 +239,10 @@ sequenceDiagram
 captchaplugin-main/
 ├── .gitignore                      # Git exclusion rules for builds, IDEs, and temp files
 ├── LICENSE                         # MIT License
-├── README.md                       # Comprehensive documentation
+├── README.md                       # English documentation
+├── README_zh-CN.md                 # Simplified Chinese documentation
+├── README_ja.md                    # Japanese documentation
 ├── MaiRec.png                      # Project icon / logo (512x512)
-├── 项目源代码分析报告.md             # In-depth architectural analysis and audit report (Chinese)
 ├── extension/                      # Main Chromium Extension (MV3)
 │   ├── manifest.json               # Extension manifest (MV3, Permissions, Content Scripts, DNR)
 │   ├── background.js               # Service Worker entry, DNR routing, IPC coordination
