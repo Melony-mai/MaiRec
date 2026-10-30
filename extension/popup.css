@@ -19,6 +19,95 @@
   --mac-btn-active: rgba(255, 255, 255, 0.05);
   --mac-focus-ring: 0 0 0 3px rgba(10, 132, 255, 0.35);
   --mac-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+
+  --mac-badge-bg: rgba(255, 255, 255, 0.08);
+  --mac-badge-border: rgba(255, 255, 255, 0.08);
+  --mac-badge-color: var(--mac-text-secondary);
+  --mac-row-hover: rgba(255, 255, 255, 0.02);
+  --mac-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --mac-btn-border-hover: rgba(255, 255, 255, 0.2);
+  --mac-scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --mac-scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
+  --mac-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+  --mac-option-bg: #252528;
+  --mac-option-color: #f5f5f7;
+}
+
+[data-theme="dark"] {
+  --mac-window-bg: #1c1c1e;
+  --mac-card-bg: rgba(255, 255, 255, 0.05);
+  --mac-card-border: rgba(255, 255, 255, 0.08);
+  --mac-row-border: rgba(255, 255, 255, 0.06);
+  --mac-text-primary: #f5f5f7;
+  --mac-text-secondary: rgba(235, 235, 245, 0.55);
+  --mac-text-muted: rgba(235, 235, 245, 0.38);
+  --mac-accent: #0A84FF;
+  --mac-accent-hover: #0077ED;
+  --mac-success: #34c759;
+  --mac-switch-off: rgba(120, 120, 128, 0.36);
+  --mac-input-bg: rgba(0, 0, 0, 0.28);
+  --mac-input-border: rgba(255, 255, 255, 0.14);
+  --mac-btn-bg: rgba(255, 255, 255, 0.08);
+  --mac-btn-border: rgba(255, 255, 255, 0.12);
+  --mac-btn-hover: rgba(255, 255, 255, 0.13);
+  --mac-btn-active: rgba(255, 255, 255, 0.05);
+  --mac-focus-ring: 0 0 0 3px rgba(10, 132, 255, 0.35);
+  --mac-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+
+  --mac-badge-bg: rgba(255, 255, 255, 0.08);
+  --mac-badge-border: rgba(255, 255, 255, 0.08);
+  --mac-badge-color: var(--mac-text-secondary);
+  --mac-row-hover: rgba(255, 255, 255, 0.02);
+  --mac-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --mac-btn-border-hover: rgba(255, 255, 255, 0.2);
+  --mac-scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --mac-scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
+  --mac-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+  --mac-option-bg: #252528;
+  --mac-option-color: #f5f5f7;
+}
+
+[data-theme="light"] {
+  /* macOS Light Aqua System Palette */
+  --mac-window-bg: #f2f2f7;
+  --mac-card-bg: #ffffff;
+  --mac-card-border: rgba(0, 0, 0, 0.08);
+  --mac-row-border: rgba(0, 0, 0, 0.06);
+  --mac-text-primary: #1d1d1f;
+  --mac-text-secondary: rgba(60, 60, 67, 0.65);
+  --mac-text-muted: rgba(60, 60, 67, 0.45);
+  --mac-accent: #007aff;
+  --mac-accent-hover: #0062cc;
+  --mac-success: #34c759;
+  --mac-switch-off: rgba(120, 120, 128, 0.24);
+  --mac-input-bg: #ffffff;
+  --mac-input-border: rgba(0, 0, 0, 0.15);
+  --mac-btn-bg: #ffffff;
+  --mac-btn-border: rgba(0, 0, 0, 0.14);
+  --mac-btn-hover: #f5f5f7;
+  --mac-btn-active: rgba(0, 0, 0, 0.06);
+  --mac-focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.35);
+  --mac-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  --mac-badge-bg: rgba(0, 0, 0, 0.05);
+  --mac-badge-border: rgba(0, 0, 0, 0.08);
+  --mac-badge-color: var(--mac-text-secondary);
+  --mac-row-hover: rgba(0, 0, 0, 0.02);
+  --mac-btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --mac-btn-border-hover: rgba(0, 0, 0, 0.22);
+  --mac-scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --mac-scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+  --mac-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(0,0,0,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+  --mac-option-bg: #ffffff;
+  --mac-option-color: #1d1d1f;
+}
+
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
 }
 
 * {
@@ -93,9 +182,9 @@ h1 {
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--mac-text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--mac-badge-bg);
+  color: var(--mac-badge-color);
+  border: 1px solid var(--mac-badge-border);
   letter-spacing: 0.2px;
 }
 
@@ -121,11 +210,12 @@ h1 {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  box-shadow: var(--mac-btn-shadow);
 }
 
 .mac-back-btn:hover {
   background: var(--mac-btn-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--mac-btn-border-hover);
 }
 
 .mac-back-btn:active {
@@ -187,7 +277,7 @@ h1 {
 }
 
 .setting-row:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--mac-row-hover);
 }
 
 .setting-label {
@@ -278,7 +368,7 @@ select.lang-select {
   appearance: none;
   -webkit-appearance: none;
   background-color: var(--mac-btn-bg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m2.5 3.5 2.5 2.5 2.5-2.5'/%3E%3C/svg%3E");
+  background-image: var(--mac-select-arrow);
   background-repeat: no-repeat;
   background-position: right 8px center;
   border: 1px solid var(--mac-btn-border);
@@ -295,7 +385,7 @@ select.lang-select {
 
 select.lang-select:hover {
   background-color: var(--mac-btn-hover);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--mac-btn-border-hover);
 }
 
 select.lang-select:focus {
@@ -304,8 +394,8 @@ select.lang-select:focus {
 }
 
 select.lang-select option {
-  background-color: #252528;
-  color: #f5f5f7;
+  background-color: var(--mac-option-bg);
+  color: var(--mac-option-color);
 }
 
 /* macOS Push Buttons */
@@ -328,12 +418,12 @@ select.lang-select option {
   background: var(--mac-btn-bg);
   color: var(--mac-text-primary);
   border: 1px solid var(--mac-btn-border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mac-btn-shadow);
 }
 
 .btn-secondary:hover {
   background: var(--mac-btn-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--mac-btn-border-hover);
 }
 
 .btn-secondary:active {
@@ -433,6 +523,68 @@ select.lang-select option {
   margin: 7px 10px 0;
 }
 
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: var(--mac-btn-bg);
+  border: 1px solid var(--mac-btn-border);
+  border-radius: 6px;
+  color: var(--mac-text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  user-select: none;
+  outline: none;
+  box-shadow: var(--mac-btn-shadow);
+  flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--mac-btn-hover);
+  border-color: var(--mac-btn-border-hover);
+}
+
+.theme-toggle-btn:active {
+  background: var(--mac-btn-active);
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn:focus-visible {
+  box-shadow: var(--mac-focus-ring);
+}
+
+.theme-toggle-btn svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Icon visibility per theme */
+:root .theme-toggle-btn .icon-moon,
+[data-theme="dark"] .theme-toggle-btn .icon-moon {
+  display: none;
+}
+:root .theme-toggle-btn .icon-sun,
+[data-theme="dark"] .theme-toggle-btn .icon-sun {
+  display: block;
+}
+
+[data-theme="light"] .theme-toggle-btn .icon-sun {
+  display: none;
+}
+[data-theme="light"] .theme-toggle-btn .icon-moon {
+  display: block;
+}
+
+::placeholder {
+  color: var(--mac-text-muted);
+  opacity: 1;
+}
+
 /* macOS Thin Overlay Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -444,12 +596,12 @@ select.lang-select option {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--mac-scrollbar-thumb);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--mac-scrollbar-thumb-hover);
 }
 
 /* Utilities */

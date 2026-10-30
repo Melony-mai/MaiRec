@@ -94,5 +94,20 @@
   },
   "section_timeout_report": {
     "message": "超时设置 / 报告"
+  },
+  "theme": {
+    "message": "主题"
+  },
+  "theme_dark": {
+    "message": "深色"
+  },
+  "theme_light": {
+    "message": "浅色"
+  },
+  "theme_toggle_to_light": {
+    "message": "切换到浅色模式"
+  },
+  "theme_toggle_to_dark": {
+    "message": "切换到深色模式"
   }
 }

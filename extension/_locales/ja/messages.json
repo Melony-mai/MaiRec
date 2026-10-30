@@ -94,5 +94,20 @@
   },
   "section_timeout_report": {
     "message": "タイムアウト設定 / レポート"
+  },
+  "theme": {
+    "message": "テーマ"
+  },
+  "theme_dark": {
+    "message": "ダーク"
+  },
+  "theme_light": {
+    "message": "ライト"
+  },
+  "theme_toggle_to_light": {
+    "message": "ライトモードに切り替え"
+  },
+  "theme_toggle_to_dark": {
+    "message": "ダークモードに切り替え"
   }
 }

@@ -1,13 +1,40 @@
 import { getMessage, applyTranslations, getStoredLanguage } from './i18n.js';
+import { getStoredTheme, applyTheme, setStoredTheme, updateThemeButton, normalizeTheme } from './theme.js';
 
 (async function(){
   const q = sel => document.querySelector(sel);
   let currentLang = 'en';
+  let currentTheme = 'dark';
+
+  try {
+    currentTheme = await getStoredTheme();
+    applyTheme(currentTheme);
+  } catch {}
 
   try {
     currentLang = await getStoredLanguage();
     applyTranslations(currentLang);
   } catch {}
+
+  const themeBtn = q('#theme_toggle_btn');
+  updateThemeButton(themeBtn, currentTheme, currentLang);
+
+  themeBtn?.addEventListener('click', async () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(currentTheme);
+    updateThemeButton(themeBtn, currentTheme, currentLang);
+    await setStoredTheme(currentTheme);
+  });
+
+  if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.theme) {
+        currentTheme = normalizeTheme(changes.theme.newValue);
+        applyTheme(currentTheme);
+        updateThemeButton(themeBtn, currentTheme, currentLang);
+      }
+    });
+  }
 
   function rpc(name, ...args){
     const token = Math.random().toString(36).slice(2);

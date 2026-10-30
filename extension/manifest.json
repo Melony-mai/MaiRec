@@ -7,6 +7,7 @@
     {
       "resources": [
         "i18n.js",
+        "theme.js",
         "models/type.onnx",
         "models/grid.onnx",
         "models/grid.meta.json",

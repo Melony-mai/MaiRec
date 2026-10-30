@@ -7,11 +7,20 @@ import {
   getStoredLanguage,
   setStoredLanguage
 } from './i18n.js';
+import {
+  getStoredTheme,
+  setStoredTheme,
+  applyTheme,
+  updateThemeButton,
+  normalizeTheme,
+  DEFAULT_THEME
+} from './theme.js';
 
 const $  = id  => document.getElementById(id);
 const qq = sel => document.querySelector(sel);
 
 let currentLang = 'en';
+let currentTheme = DEFAULT_THEME;
 let lastReportsState = {};
 
 function show(page){
@@ -38,12 +47,61 @@ async function changeLanguage(newLang) {
     langSelect.value = currentLang;
   }
   applyTranslations(currentLang);
+  updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
   await setStoredLanguage(currentLang);
   save(readUI());
   renderStatus(lastReportsState);
   await loadWsMode();
   updateRepKeyLabel();
 }
+
+async function changeTheme(newTheme) {
+  currentTheme = normalizeTheme(newTheme);
+  applyTheme(currentTheme);
+  const themeSelect = $('theme_select');
+  if (themeSelect && themeSelect.value !== currentTheme) {
+    themeSelect.value = currentTheme;
+  }
+  updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+  await setStoredTheme(currentTheme);
+  save(readUI());
+}
+
+async function initTheme() {
+  currentTheme = await getStoredTheme();
+  applyTheme(currentTheme);
+  const themeSelect = $('theme_select');
+  if (themeSelect) {
+    themeSelect.value = currentTheme;
+    themeSelect.addEventListener('change', async (e) => {
+      await changeTheme(e.target.value);
+    });
+  }
+  const themeToggle = $('theme_toggle_btn');
+  if (themeToggle) {
+    updateThemeButton(themeToggle, currentTheme, currentLang);
+    themeToggle.addEventListener('click', async () => {
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      await changeTheme(nextTheme);
+    });
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.theme) {
+      currentTheme = normalizeTheme(changes.theme.newValue);
+      applyTheme(currentTheme);
+      const themeSelect = $('theme_select');
+      if (themeSelect && themeSelect.value !== currentTheme) {
+        themeSelect.value = currentTheme;
+      }
+      updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+    }
+  });
+}
+
+initTheme();
 
 async function initI18n() {
   currentLang = await getStoredLanguage();
@@ -55,6 +113,7 @@ async function initI18n() {
     });
   }
   applyTranslations(currentLang);
+  updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
 }
 
 initI18n();
@@ -62,10 +121,11 @@ initI18n();
 const defaults = {
   enabled:true, recaptcha:true, autoclick:true, images:true,
   click_delay:300, reveal_delay:850, verify_delay:850,
-  language:'en'
+  language:'en',
+  theme:'dark'
 };
 
-chrome.storage.local.get(['settings', 'language']).then(({ settings = {}, language }) => {
+chrome.storage.local.get(['settings', 'language', 'theme']).then(({ settings = {}, language, theme }) => {
   const ui = { ...defaults };
   ui.enabled      = settings.enabled ?? defaults.enabled;
   ui.autoclick    = settings.recaptcha_auto_open  ?? defaults.autoclick;
@@ -89,6 +149,16 @@ chrome.storage.local.get(['settings', 'language']).then(({ settings = {}, langua
     const langSelect = $('lang_select');
     if (langSelect) langSelect.value = currentLang;
     applyTranslations(currentLang);
+    updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+  }
+
+  const savedTheme = theme || settings.theme;
+  if (savedTheme) {
+    currentTheme = normalizeTheme(savedTheme);
+    applyTheme(currentTheme);
+    const themeSelect = $('theme_select');
+    if (themeSelect) themeSelect.value = currentTheme;
+    updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
   }
 });
 
@@ -108,7 +178,8 @@ function readUI () {
     click_delay:  Math.max(0, Number($('click_delay').value)  || 0),
     reveal_delay: Math.max(0, Number($('reveal_delay').value) || 0),
     verify_delay: Math.max(0, Number($('verify_delay').value) || 0),
-    language:     currentLang
+    language:     currentLang,
+    theme:        currentTheme
   };
 }
 function save (ui) {
@@ -119,7 +190,8 @@ function save (ui) {
     recaptcha_delay_between_clicks: ui.click_delay,
     recaptcha_delay_dynamic_reveal: ui.reveal_delay,
     recaptcha_delay_before_verify:  ui.verify_delay,
-    language:                       ui.language
+    language:                       ui.language,
+    theme:                          ui.theme
   };
   // settings::update merges into stored settings in the background (do NOT
   // storage.local.set here — that would wipe keys not present in `out`).

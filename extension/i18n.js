@@ -42,7 +42,12 @@ export const translations = {
     "unit_ms": "ms",
     "help_timeouts": "A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent.",
     "section_solver": "Solver Settings",
-    "section_timeout_report": "Timeout Settings / Report"
+    "section_timeout_report": "Timeout Settings / Report",
+    "theme": "Theme",
+    "theme_dark": "Dark",
+    "theme_light": "Light",
+    "theme_toggle_to_light": "Switch to light mode",
+    "theme_toggle_to_dark": "Switch to dark mode"
   },
   "ja": {
     "appName": "MaiRec",
@@ -76,7 +81,12 @@ export const translations = {
     "unit_ms": "ms",
     "help_timeouts": "各タイムアウトにランダムで 0〜300 ms が追加されます。動的表示はすでに費やされた認識時間をカウントします。",
     "section_solver": "ソルバー設定",
-    "section_timeout_report": "タイムアウト設定 / レポート"
+    "section_timeout_report": "タイムアウト設定 / レポート",
+    "theme": "テーマ",
+    "theme_dark": "ダーク",
+    "theme_light": "ライト",
+    "theme_toggle_to_light": "ライトモードに切り替え",
+    "theme_toggle_to_dark": "ダークモードに切り替え"
   },
   "zh": {
     "appName": "MaiRec",
@@ -110,7 +120,12 @@ export const translations = {
     "unit_ms": "毫秒",
     "help_timeouts": "每个超时时间都会随机增加 0–300 毫秒。动态出现会计算已消耗的识别时间。",
     "section_solver": "求解器设置",
-    "section_timeout_report": "超时设置 / 报告"
+    "section_timeout_report": "超时设置 / 报告",
+    "theme": "主题",
+    "theme_dark": "深色",
+    "theme_light": "浅色",
+    "theme_toggle_to_light": "切换到浅色模式",
+    "theme_toggle_to_dark": "切换到深色模式"
   }
 };
 

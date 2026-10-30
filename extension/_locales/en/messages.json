@@ -94,5 +94,20 @@
   },
   "section_timeout_report": {
     "message": "Timeout Settings / Report"
+  },
+  "theme": {
+    "message": "Theme"
+  },
+  "theme_dark": {
+    "message": "Dark"
+  },
+  "theme_light": {
+    "message": "Light"
+  },
+  "theme_toggle_to_light": {
+    "message": "Switch to light mode"
+  },
+  "theme_toggle_to_dark": {
+    "message": "Switch to dark mode"
   }
 }
