@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
+  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.2-informational?logo=semantic-release&logoColor=white" alt="Version v1.2" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技术架构与实现原理"><img src="https://img.shields.io/badge/推理引擎-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -79,7 +79,7 @@
   - 利用 Chrome 离屏文档（Offscreen Document）维持稳定的 WebSocket 长连接保活。
   - 通过 CDP 1.3 的 `Fetch` 协议域实施网络请求拦截，动态注入轻量级打码模板，回传求解 Token。
 - **多语言用户界面支持**：
-  - 弹窗设置界面完整支持 11 种语言本地化：简体中文、英语、阿拉伯语、德语、西班牙语、法语、印度尼西亚语、日语、马来语、葡萄牙语和俄语。
+  - 弹窗设置界面原生支持 3 种语言本地化：简体中文、日语和英语，支持实时热切换与本地配置持久化保存。
 
 ---
 
@@ -255,10 +255,10 @@ captchaplugin-main/
 │   ├── i18n.js                     # 国际化语言管理器与多语言翻译包
 │   ├── reports.html                # 独立上报/API Key 配置页面
 │   ├── reports.js                  # 独立上报页面逻辑
-│   ├── _locales/                   # 多语言国际化资源包（支持 11 国语言）
+│   ├── _locales/                   # 多语言国际化资源包（en, ja, zh）
 │   │   ├── en/messages.json        # 英语语言包
-│   │   ├── zh/messages.json        # 简体中文语言包
-│   │   └── ...                     # ar, de, es, fr, id, ja, ms, pt, ru
+│   │   ├── ja/messages.json        # 日语语言包
+│   │   └── zh/messages.json        # 简体中文语言包
 │   ├── captcha/                    # 核心人机验证识别算法库
 │   │   ├── recaptcha.js            # 挑战解析、DOM 监听与动作调度器
 │   │   ├── recaptcha_ai.js         # ONNX Runtime 模型加载与张量推理
@@ -367,16 +367,27 @@ captchaplugin-main/
   <img src="MaiRec.png" alt="Popup Preview" width="100" />
 </p>
 
-### 核心功能开关
+弹窗设置面板在结构上划分为两个主要区块：**求解器设置**与**超时设置 / 报告**，并提供二级子菜单用于微调拟人化延时与配置数据上报。
+
+### 1. 求解器设置
 
 | 配置选项 | 默认状态 | 详细说明 |
 |---|---|---|
-| **Language** | `English` | 手动切换扩展界面语言（支持英语、阿拉伯语、德语、西班牙语、法语、印尼语、日语、马来语、葡萄牙语、俄语、简体中文 11 国语言）。 |
+| **Language** | `English` | 手动切换扩展界面语言（支持 English、日本語、简体中文 3 种语言，重启浏览器后保持偏好）。 |
 | **Solver enabled** | `开启` | 扩展总开关，关闭后停止所有自动化拦截与求解行为。 |
 | **reCAPTCHA support** | `开启` | 是否启用对 Google reCAPTCHA 挑战的识别支持。 |
 | **Auto-click buttons** | `开启` | 检测到复选框时是否自动模拟点击“我不是机器人”。 |
-| **Solve image challenges** | `开启` | 弹出图像验证码时是否自动进行切片识别与点击提交。 |
-| **WS mode** | `关闭` | 是否接入 WebSocket 远程打码调度中心（需配置有效 API Key）。 |
+| **Solve image challenges** | `开启` | 弹出图像验证码时是否自动通过本地 ONNX 模型进行切片识别与点击提交。 |
+
+### 2. 超时设置 / 报告
+
+该区块整合了远程工作节点与上报、延时相关参数配置：
+
+| 配置选项 / 控件 | 默认状态 | 详细说明 |
+|---|---|---|
+| **WS mode** | `关闭` | 是否接入 WebSocket 远程打码调度中心作为分布式打码节点。现已移至此区块与上报设置合并归类；需在“报告”中配置 32 位有效 API Key 即可激活开关。 |
+| **超时设置 (Timeouts)** | 按钮 | 进入延时配置子页面，调节拟人化行为停顿。 |
+| **报告 (Reports)** | 按钮 | 进入上报与密钥配置子页面，查看发送状态及录入 16/32 位 API Key。 |
 
 ### 拟人化延时与时间参数 (Timeouts 子菜单)
 

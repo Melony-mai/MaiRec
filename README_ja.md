@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
+  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.2-informational?logo=semantic-release&logoColor=white" alt="Version v1.2" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技術アーキテクチャと内部構造"><img src="https://img.shields.io/badge/推論エンジン-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -79,7 +79,7 @@ Webスクレイピング、ペネトレーションテスト、自動回帰テ�
   - Chrome Offscreen Document を利用して持続的な WebSocket 接続を維持（Service Worker の自動スリープを回避）。
   - CDP 1.3 の `Fetch` ドメインにより不要なアセットリクエストを遮断し、軽量テンプレートを注入してトークンを取得・返送。
 - **多言語対応のポップアップUI**:
-  - ポップアップ設定画面は11言語をネイティブサポート：日本語、英語、簡体字中国語、アラビア語、ドイツ語、スペイン語、フランス語、インドネシア語、マレー語、ポルトガル語、ロシア語。
+  - ポップアップ設定画面は3言語をネイティブサポート：日本語、英語、簡体字中国語。動的切り替えおよびブラウザ再起動時の設定永続化に対応。
 
 ---
 
@@ -255,10 +255,10 @@ captchaplugin-main/
 │   ├── i18n.js                     # 国際化言語マネージャー＆多言語翻訳定義
 │   ├── reports.html                # レポート／API Key 設定UI
 │   ├── reports.js                  # レポート設定ロジック
-│   ├── _locales/                   # 11言語対応の国際化リソース
-│   │   ├── ja/messages.json        # 日本語リソース
+│   ├── _locales/                   # 多言語対応の国際化リソース（en, ja, zh）
 │   │   ├── en/messages.json        # 英語リソース
-│   │   └── ...                     # ar, de, es, fr, id, ms, pt, ru, zh
+│   │   ├── ja/messages.json        # 日本語リソース
+│   │   └── zh/messages.json        # 簡体字中国語リソース
 │   ├── captcha/                    # コア画像認識アルゴリズム
 │   │   ├── recaptcha.js            # チャレンジ監視、画像スライス、操作シーケンス
 │   │   ├── recaptcha_ai.js         # ONNX Runtime モデル読み込みと推論処理
@@ -367,16 +367,27 @@ captchaplugin-main/
   <img src="MaiRec.png" alt="Popup Preview" width="100" />
 </p>
 
-### 主要トグルスイッチ
+ポップアップ設定パネルは論理的に2つの主要セクション「**ソルバー設定**」と「**タイムアウト設定 / レポート**」に整理されており、詳細な遅延調整やレポート送信状態の確認を行うサブメニューを備えています。
+
+### 1. ソルバー設定
 
 | 項目 | デフォルト | 説明 |
 |---|---|---|
-| **Language** | `English` | 拡張機能のUI言語を手動選択（英語、アラビア語、ドイツ語、スペイン語、フランス語、インドネシア語、日本語、マレー語、ポルトガル語、ロシア語、簡体字中国語の11言語対応）。 |
+| **Language** | `English` | 拡張機能のUI言語を手動選択（English、日本語、简体中文の3言語対応、ブラウザ再起動後も設定を維持）。 |
 | **Solver enabled** | `ON` | 拡張機能全体のマスター有効/無効スイッチ。 |
 | **reCAPTCHA support** | `ON` | Google reCAPTCHA 認証の自動検知と解決の有効化。 |
 | **Auto-click buttons** | `ON` | チェックボックスを検出した際、「私はロボットではありません」を自動クリック。 |
-| **Solve image challenges** | `ON` | 画像認証が表示された際、正解タイルを自動判定してクリック・送信。 |
-| **WS mode** | `OFF` | WebSocket リモート解決クラスタへの接続（有効な API キーが必要）。 |
+| **Solve image challenges** | `ON` | 画像認証が表示された際、ローカルの ONNX モデルにより正解タイルを自動判定してクリック・送信。 |
+
+### 2. タイムアウト設定 / レポート
+
+リモートワーカー連携とレポート、遅延設定を論理的に統合したセクションです：
+
+| 項目 / コントロール | デフォルト | 説明 |
+|---|---|---|
+| **WS mode** | `OFF` | WebSocket リモート解決クラスタへの接続スイッチ。本セクション（タイムアウト設定 / レポート）に再配置。利用にはレポート画面で32文字の有効な API キーの設定が必要です。 |
+| **タイムアウト (Timeouts)** | ボタン | 人間的な操作遅延を調整する Timeouts サブメニューを開きます。 |
+| **レポート (Reports)** | ボタン | 送信状態の確認や 16/32 文字の API キーを設定する Reports サブメニューを開きます。 |
 
 ### タイムアウトと人間的遅延設定 (Timeouts サブメニュー)
 

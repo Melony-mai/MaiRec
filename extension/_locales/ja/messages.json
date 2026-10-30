@@ -91,5 +91,11 @@
   },
   "help_timeouts": {
     "message": "各タイムアウトにランダムで 0〜300 ms が追加されます。動的表示はすでに費やされた認識時間をカウントします。"
+  },
+  "section_solver": {
+    "message": "ソルバー設定"
+  },
+  "section_timeout_report": {
+    "message": "タイムアウト設定 / レポート"
   }
 }

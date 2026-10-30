@@ -91,5 +91,11 @@
   },
   "help_timeouts": {
     "message": "每个超时时间都会随机增加 0–300 毫秒。动态出现会计算已消耗的识别时间。"
+  },
+  "section_solver": {
+    "message": "求解器设置"
+  },
+  "section_timeout_report": {
+    "message": "超时设置 / 报告"
   }
 }

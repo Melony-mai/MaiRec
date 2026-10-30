@@ -5,34 +5,28 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title data-i18n="appName">MaiRec</title>
   <link rel="stylesheet" href="popup.css">
-  <style>
-    .hidden { display: none !important; }
-    .inline-btn { padding: 6px 10px; font-size: 13px; }
-    .header-row { display:flex; align-items:center; justify-content:space-between; }
-    .btn.full + .btn.full { margin-top: 8px; }
-  </style>
 </head>
 <body>
   
   <div id="page_main">
     <div class="header">
-      <h1 data-i18n="appName">MaiRec</h1>
+      <div class="brand">
+        <h1 data-i18n="appName">MaiRec</h1>
+        <span class="badge">v1.2</span>
+      </div>
     </div>
 
+    <!-- Solver Settings Section -->
     <section class="card">
+      <div class="card-header">
+        <h2 data-i18n="section_solver">Solver Settings</h2>
+      </div>
+      <hr class="divider">
       <div class="kv">
         <span data-i18n="language">Language</span>
         <select id="lang_select" class="lang-select" aria-label="Language">
           <option value="en">English</option>
-          <option value="ar">العربية (Arabic)</option>
-          <option value="de">Deutsch (German)</option>
-          <option value="es">Español (Spanish)</option>
-          <option value="fr">Français (French)</option>
-          <option value="id">Bahasa Indonesia (Indonesian)</option>
           <option value="ja">日本語 (Japanese)</option>
-          <option value="ms">Bahasa Melayu (Malay)</option>
-          <option value="pt">Português (Portuguese)</option>
-          <option value="ru">Русский (Russian)</option>
           <option value="zh">简体中文 (Simplified Chinese)</option>
         </select>
 
@@ -47,16 +41,24 @@
 
         <span data-i18n="solve_images">Solve image challenges</span>
         <label class="switch"><input type="checkbox" id="images"><span class="slider"></span></label>
-
-        <span id="ws_mode_label" data-i18n="ws_mode" data-i18n-title="ws_mode_tooltip" title="Requires a 32-character API key" class="hidden">WS mode</span>
-        <label class="switch hidden" id="ws_mode_switch"><input type="checkbox" id="ws_mode" disabled><span class="slider"></span></label>
       </div>
       <p class="small help" data-i18n="help_local_models">Models run locally, no data is sent outside.</p>
     </section>
 
+    <!-- Timeout Settings / Report Section -->
     <section class="card">
-      <button id="open_timeouts" class="btn full" data-i18n="btn_timeouts">Timeouts</button>
-      <button id="open_reports" class="btn full" data-i18n="btn_reports">Reports</button>
+      <div class="card-header">
+        <h2 data-i18n="section_timeout_report">Timeout Settings / Report</h2>
+      </div>
+      <hr class="divider">
+      <div class="kv">
+        <span id="ws_mode_label" data-i18n="ws_mode" data-i18n-title="ws_mode_tooltip" title="Requires a 32-character API key" class="hidden">WS mode</span>
+        <label class="switch hidden" id="ws_mode_switch"><input type="checkbox" id="ws_mode" disabled><span class="slider"></span></label>
+      </div>
+      <div class="btn-grid">
+        <button id="open_timeouts" class="btn btn-secondary" data-i18n="btn_timeouts">Timeouts</button>
+        <button id="open_reports" class="btn btn-secondary" data-i18n="btn_reports">Reports</button>
+      </div>
     </section>
 
     <div class="footer small">
@@ -65,6 +67,7 @@
   </div>
 
   
+  <!-- Reports Submenu Page -->
   <div id="page_reports" class="hidden">
     <div class="header-row">
       <h1 data-i18n="reports_title">Reports</h1>
@@ -72,14 +75,12 @@
     </div>
 
     <section class="card">
-      <h2 data-i18n="reports_title">Reports</h2>
-      <hr class="divider">
       <div class="reports-grid">
         <span data-i18n="enable_reports">Enable reports (disabled)</span>
         <label class="switch"><input type="checkbox" id="rep_enabled" disabled><span class="slider"></span></label>
 
         <span id="rep_key_label" data-i18n="rep_key_label_16">API key (16 chars)</span>
-        <input type="text" id="rep_key" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456">
+        <input type="text" id="rep_key" pattern="[0-9a-z]{16}([0-9a-z]{16})?" maxlength="32" placeholder="secretkey0123456" spellcheck="false" autocomplete="off">
 
         <button id="rep_send" class="btn full" data-i18n="btn_send_reports">Send reports</button>
         <span id="rep_status" class="small status full"></span>
@@ -88,24 +89,23 @@
   </div>
 
 
+  <!-- Timeouts Submenu Page -->
   <div id="page_timeouts" class="hidden">
     <div class="header-row">
-      <h1 data-i18n="timeouts_title">Timeouts</h1>
+      <h1 data-i18n="timeouts_title_ms">Timeouts (ms)</h1>
       <button id="back_main_t" class="btn inline-btn" data-i18n="btn_back">← Back</button>
     </div>
 
     <section class="card">
-      <h2 data-i18n="timeouts_title_ms">Timeouts (ms)</h2>
-      <hr class="divider">
       <div class="kv">
         <span data-i18n="timeout_between_clicks">Between tile clicks</span>
-        <span class="unit"><input type="number" id="click_delay" min="0" step="10" placeholder="300"><small data-i18n="unit_ms">ms</small></span>
+        <span class="unit"><input type="number" id="click_delay" min="0" max="5000" step="10" placeholder="300"><small data-i18n="unit_ms">ms</small></span>
 
         <span data-i18n="timeout_dynamic_reveal">Dynamic reveal → click</span>
-        <span class="unit"><input type="number" id="reveal_delay" min="0" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
+        <span class="unit"><input type="number" id="reveal_delay" min="0" max="5000" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
 
         <span data-i18n="timeout_verify">Last click → verify</span>
-        <span class="unit"><input type="number" id="verify_delay" min="0" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
+        <span class="unit"><input type="number" id="verify_delay" min="0" max="5000" step="10" placeholder="850"><small data-i18n="unit_ms">ms</small></span>
       </div>
       <p class="small help" data-i18n="help_timeouts">A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent.</p>
     </section>

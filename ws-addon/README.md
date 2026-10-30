@@ -16,7 +16,7 @@ Tasks are submitted using the standard 2captcha or AntiCaptcha API format. Full 
 
 1. Register at https://captchaplugin.com/
 2. Go to https://captchaplugin.com/keys.php and generate a key
-3. Paste the key into the extension popup (Reports tab), then enable WS mode
+3. Paste the key into the extension popup (Reports submenu), then enable WS mode in the Timeout Settings / Report section
 
 ## Installation
 
@@ -30,7 +30,7 @@ Tasks are submitted using the standard 2captcha or AntiCaptcha API format. Full 
    manifest.json               → extension/manifest.json
    ```
 3. Reload the extension from `chrome://extensions` (click the reload icon).
-4. Paste your API key in the extension popup and enable WS mode.
+4. Paste your API key in the extension popup (Reports submenu) and enable WS mode in the Timeout Settings / Report section.
 
 ## What changes
 

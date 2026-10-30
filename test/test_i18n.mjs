@@ -160,14 +160,14 @@ while ((match = tagRegex.exec(html)) !== null) {
 
 console.log('Registered', global.document.elements.size, 'elements in DOM mock.');
 
-// Test language switching across all 11 languages
+// Test language switching across all 3 supported languages
 async function runTests() {
   const langSelect = global.document.getElementById('lang_select');
   if (!langSelect) throw new Error('lang_select element not found in DOM!');
 
   // Test 1: Supported languages check
-  if (SUPPORTED_LANGUAGES.length !== 11) {
-    throw new Error('Expected 11 languages, got ' + SUPPORTED_LANGUAGES.length);
+  if (SUPPORTED_LANGUAGES.length !== 3) {
+    throw new Error('Expected 3 languages, got ' + SUPPORTED_LANGUAGES.length);
   }
 
   // Test 2: For each language, verify switching and UI updates
@@ -182,9 +182,8 @@ async function runTests() {
     if (global.document.documentElement.lang !== lang.code) {
       throw new Error(`Lang not updated on html: expected ${lang.code}, got ${global.document.documentElement.lang}`);
     }
-    const expectedDir = (lang.code === 'ar') ? 'rtl' : 'ltr';
-    if (global.document.documentElement.dir !== expectedDir) {
-      throw new Error(`Dir not updated on html: expected ${expectedDir}, got ${global.document.documentElement.dir}`);
+    if (global.document.documentElement.dir !== 'ltr') {
+      throw new Error(`Dir not ltr on html: expected ltr, got ${global.document.documentElement.dir}`);
     }
 
     // Verify all data-i18n elements
@@ -216,9 +215,9 @@ async function runTests() {
     }
   }
 
-  console.log('[PASS] All 11 languages successfully switched, translated, and verified!');
+  console.log('[PASS] All 3 languages successfully switched, translated, and verified!');
 
-  // Test 3: Browser restart simulation
+  // Test 3: Browser restart simulation with Japanese
   console.log('[TEST] Simulating browser restart with saved language "ja"...');
   await setStoredLanguage('ja');
   // Clear memory cache, reload from storage
@@ -230,19 +229,23 @@ async function runTests() {
   if (solverEnabledLabel.textContent !== 'ソルバー有効') {
     throw new Error('Label not restored to Japanese: ' + solverEnabledLabel.textContent);
   }
-  console.log('[PASS] Browser restart simulation passed!');
+  console.log('[PASS] Browser restart simulation (ja) passed!');
 
-  // Test 4: Another language restart test (Arabic - RTL)
-  console.log('[TEST] Simulating browser restart with saved language "ar" (RTL)...');
-  await setStoredLanguage('ar');
-  const restoredAr = await getStoredLanguage();
-  applyTranslations(restoredAr, global.document);
-  if (global.document.documentElement.dir !== 'rtl') throw new Error('RTL dir not restored');
-  const solverAr = global.document.querySelector('[data-i18n="solver_enabled"]');
-  if (solverAr.textContent !== 'تمكين الحلّال') {
-    throw new Error('Label not restored to Arabic: ' + solverAr.textContent);
+  // Test 4: Browser restart simulation with Simplified Chinese
+  console.log('[TEST] Simulating browser restart with saved language "zh"...');
+  await setStoredLanguage('zh');
+  const restoredZh = await getStoredLanguage();
+  applyTranslations(restoredZh, global.document);
+  if (global.document.documentElement.lang !== 'zh') throw new Error('HTML lang not restored');
+  const solverZh = global.document.querySelector('[data-i18n="solver_enabled"]');
+  if (solverZh.textContent !== '已启用求解器') {
+    throw new Error('Label not restored to Simplified Chinese: ' + solverZh.textContent);
   }
-  console.log('[PASS] Arabic RTL restart simulation passed!');
+  const sectionTimeoutZh = global.document.querySelector('[data-i18n="section_timeout_report"]');
+  if (sectionTimeoutZh.textContent !== '超时设置 / 报告') {
+    throw new Error('Section title not restored to Simplified Chinese: ' + sectionTimeoutZh.textContent);
+  }
+  console.log('[PASS] Browser restart simulation (zh) passed!');
 
   // Test 5: Verify settings save does not overwrite or corrupt language
   console.log('[TEST] Verifying settings::update preserves language preference...');

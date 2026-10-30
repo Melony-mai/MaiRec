@@ -91,5 +91,11 @@
   },
   "help_timeouts": {
     "message": "A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent."
+  },
+  "section_solver": {
+    "message": "Solver Settings"
+  },
+  "section_timeout_report": {
+    "message": "Timeout Settings / Report"
   }
 }

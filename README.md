@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/version-v1.1-informational?logo=semantic-release&logoColor=white" alt="Version v1.1" /></a>
+  <a href="#features"><img src="https://img.shields.io/badge/version-v1.2-informational?logo=semantic-release&logoColor=white" alt="Version v1.2" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -79,7 +79,7 @@ Whether you are performing web scraping, penetration testing, automated regressi
   - Maintains persistent WebSocket communication via Chrome Offscreen Documents.
   - Intercepts requests via Chrome DevTools Protocol (CDP 1.3 `Fetch`/`Network` domain), injects lightweight solving templates, and returns verification tokens to central dispatchers.
 - **Multilingual User Interface**:
-  - Fully localized extension popup supporting 11 languages: English, Arabic, German, Spanish, French, Indonesian, Japanese, Malay, Portuguese, Russian, and Simplified Chinese.
+  - Fully localized extension popup supporting 3 languages: Simplified Chinese, Japanese, and English, with dynamic switching and persistent storage.
 
 ---
 
@@ -256,10 +256,10 @@ captchaplugin-main/
 │   ├── i18n.js                     # Internationalization module & language manager
 │   ├── reports.html                # Standalone reporting / API key interface
 │   ├── reports.js                  # Reports controller
-│   ├── _locales/                   # I18n resource directories (11 languages)
+│   ├── _locales/                   # I18n localization resources (en, ja, zh)
 │   │   ├── en/messages.json        # English locale strings
-│   │   ├── zh/messages.json        # Simplified Chinese locale strings
-│   │   └── ...                     # ar, de, es, fr, id, ja, ms, pt, ru
+│   │   ├── ja/messages.json        # Japanese locale strings
+│   │   └── zh/messages.json        # Simplified Chinese locale strings
 │   ├── captcha/                    # Core captcha recognition algorithms
 │   │   ├── recaptcha.js            # Challenge parser, DOM tracker, action sequencer
 │   │   ├── recaptcha_ai.js         # ONNX Runtime model loader and tensor inference
@@ -369,16 +369,27 @@ Click on the extension icon in your browser toolbar to open the settings panel:
   <img src="MaiRec.png" alt="Popup Preview" width="100" />
 </p>
 
-### Main Settings
+The popup interface is logically organized into two primary sections: **Solver Settings** and **Timeout Settings / Report**, along with quick-access submenus for timeout calibrations and reporting status.
+
+### 1. Solver Settings
 
 | Option | Default | Description |
 |---|---|---|
-| **Language** | `English` | Manually select UI language across 11 supported languages (English, Arabic, German, Spanish, French, Indonesian, Japanese, Malay, Portuguese, Russian, Simplified Chinese). |
+| **Language** | `English` | Choose extension interface language (English, 日本語, or 简体中文). Preferences persist across browser sessions. |
 | **Solver enabled** | `On` | Global master toggle for all extension solving features. |
 | **reCAPTCHA support** | `On` | Enables or disables interception of Google reCAPTCHA challenges. |
 | **Auto-click buttons** | `On` | Automatically clicks the "I'm not a robot" checkbox when detected. |
-| **Solve image challenges** | `On` | Automatically identifies and clicks required challenge tiles. |
-| **WS mode** | `Off` | Connects the browser to a remote WebSocket server as an automated worker node (requires API key). |
+| **Solve image challenges** | `On` | Automatically identifies and clicks required challenge tiles using local ONNX neural models. |
+
+### 2. Timeout Settings / Report
+
+This section groups remote worker connectivity with reporting and timing configurations:
+
+| Option / Control | Default | Description |
+|---|---|---|
+| **WS mode** | `Off` | Connects the browser to a remote WebSocket server as an automated worker node. Relocated to this section alongside reporting configurations; requires a 32-character API key configured in Reports. |
+| **Timeouts** | Button | Opens the Timeouts submenu to adjust human-emulation delays. |
+| **Reports** | Button | Opens the Reports submenu to view delivery statuses and configure the 16/32-character API key. |
 
 ### Timeouts & Human Emulation (Timeouts Submenu)
 
