@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/version-v1.3-informational?logo=semantic-release&logoColor=white" alt="Version v1.3" /></a>
+  <a href="#features"><img src="https://img.shields.io/badge/version-v1.31-informational?logo=semantic-release&logoColor=white" alt="Version v1.31" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -450,20 +450,51 @@ MaiRec is committed to transparent data handling:
 
 Contributions, bug reports, and pull requests are welcome!
 
+### Direct Repository Synchronization & Iteration
+
+MaiRec provides a built-in automated synchronization engine (`npm run sync` / `./sync.sh`) that connects directly with the upstream GitHub repository (`https://github.com/Melony-mai/MaiRec.git`) to keep your local workspace up-to-date without requiring manual re-downloads or re-cloning:
+
+```bash
+# Direct synchronization with upstream GitHub main branch
+npm run sync
+
+# Or using the root shortcut script
+./sync.sh
+
+# Inspect sync status and incoming commits without applying changes
+npm run sync:check
+```
+
+**Key Safety Guarantees:**
+- **Zero Work Loss**: Uncommitted modifications, staged files, and untracked files are automatically detected and safely preserved in Git stash before any remote changes are integrated.
+- **Direct Remote Iteration**: Automatically fetches and merges latest upstream commits directly into your local working branch.
+- **Safe Merge Conflict Handling**: If conflicts occur between incoming remote changes and local edits, MaiRec halts safely without clobbering files, preserves all work, and prints clear instructions on how to resolve the conflicted files.
+- **Automatic Health & Regression Verification**: Automatically runs project manifest checks, dependency integrity checks, and the automated test suite (`npm test`) immediately after synchronization to ensure the codebase remains fully operational.
+
+### Development Workflow
+
 1. Fork the repository on GitHub.
-2. Create a dedicated feature branch:
+2. Synchronize with the latest upstream repository:
+   ```bash
+   npm run sync
+   ```
+3. Create a dedicated feature branch:
    ```bash
    git checkout -b feature/model-optimization
    ```
-3. Commit your changes with clear, descriptive commit messages:
+4. Run the automated test suite:
+   ```bash
+   npm test
+   ```
+5. Commit your changes with clear, descriptive commit messages:
    ```bash
    git commit -m "feat(ai): optimize thresholding heuristics for crosswalks"
    ```
-4. Push your branch:
+6. Push your branch:
    ```bash
    git push origin feature/model-optimization
    ```
-5. Open a Pull Request detailing your enhancements.
+7. Open a Pull Request detailing your enhancements.
 
 ---
 

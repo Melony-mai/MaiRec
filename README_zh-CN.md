@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.3-informational?logo=semantic-release&logoColor=white" alt="Version v1.3" /></a>
+  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.31-informational?logo=semantic-release&logoColor=white" alt="Version v1.31" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技术架构与实现原理"><img src="https://img.shields.io/badge/推理引擎-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -448,20 +448,51 @@ MaiRec 尊重用户隐私并保持高度透明：
 
 欢迎提交 Issue、功能建议与代码 Pull Request！
 
+### GitHub 仓库直接同步与迭代开发能力
+
+MaiRec 内置了轻量级、高可靠的自动化仓库同步引擎（`npm run sync` / `./sync.sh`），支持直接与上游 GitHub 官方仓库（`https://github.com/Melony-mai/MaiRec.git`）同步最新改动，无需手动重新下载或重复克隆：
+
+```bash
+# 直接同步上游 GitHub main 分支最新提交
+npm run sync
+
+# 或使用根目录快捷执行脚本
+./sync.sh
+
+# 检查同步状态与待拉取提交（不修改本地文件）
+npm run sync:check
+```
+
+**核心安全保障特性：**
+- **改动零丢失（Zero Work Loss）**：自动检测未暂存更改、暂存区内容与新增未跟踪文件，在拉取远端更新前自动安全暂存至 Git Stash，杜绝任何静默覆盖或代码丢失。
+- **免重装直接迭代**：直接拉取远端最新提交合并至本地当前工作分支，让后续二次开发无缝基于最新代码基线进行。
+- **冲突安全捕获与指引**：在遭遇代码冲突时自动中断，清晰列出冲突文件列表，并提供完整的冲突解决操作指引，确保代码库状态安全可控。
+- **同步后自动化健康与回归验证**：同步完成后自动执行核心清单合法性校验、神经网络模型依赖核验及自动化测试套件（`npm test`），确保同步后工程功能 100% 健全完好。
+
+### 迭代开发流程
+
 1. Fork 本仓库到您的 GitHub 账户。
-2. 创建独立的特性分支：
+2. 与上游官方仓库同步至最新基线：
+   ```bash
+   npm run sync
+   ```
+3. 创建独立的特性分支：
    ```bash
    git checkout -b feature/model-optimization
    ```
-3. 提交代码并附带规范清晰的 Commit 描述：
+4. 运行完整自动化测试套件：
+   ```bash
+   npm test
+   ```
+5. 提交代码并附带规范清晰的 Commit 描述：
    ```bash
    git commit -m "feat(ai): optimize thresholding heuristics for crosswalks"
    ```
-4. 推送分支至远端：
+6. 推送分支至远端：
    ```bash
    git push origin feature/model-optimization
    ```
-5. 提交 Pull Request 并详细说明变更内容。
+7. 提交 Pull Request 并详细说明变更内容。
 
 ---
 

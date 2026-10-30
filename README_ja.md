@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.3-informational?logo=semantic-release&logoColor=white" alt="Version v1.3" /></a>
+  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.31-informational?logo=semantic-release&logoColor=white" alt="Version v1.31" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技術アーキテクチャと内部構造"><img src="https://img.shields.io/badge/推論エンジン-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -448,20 +448,51 @@ MaiRec は透明性の高いプライバシー運用を行っています：
 
 機能追加、バグ修正、改善提案の Pull Request を歓迎します！
 
+### リポジトリ直接同期・イテレーション機能
+
+MaiRec には、手動での再ダウンロードや再クローンを行わずに、最新の公式 GitHub リポジトリ（`https://github.com/Melony-mai/MaiRec.git`）と直接同期して開発を継続できる自動同期エンジン（`npm run sync` / `./sync.sh`）が組み込まれています：
+
+```bash
+# アップストリーム GitHub main ブランチとの直接同期
+npm run sync
+
+# またはルートショートカットスクリプトを使用
+./sync.sh
+
+# 変更を適用せずに同期ステータスと受信コミットを確認
+npm run sync:check
+```
+
+**主な安全機能と保証：**
+- **作業消失防止（ゼロロス）**: 未コミットの変更、ステージ済みファイル、未追跡ファイルを自動検出し、リモート変更を取り込む前に Git スタッシュへ安全に退避・保護します。
+- **直接リモート同期**: 最新のリモートコミットをローカル作業ブランチへ直接取得・統合します。
+- **安全なマージ競合ハンドリング**: 受信変更とローカル編集の間に競合が発生した場合、ファイルを上書きせず安全に停止し、競合ファイルの解消手順を明確に提示します。
+- **同期後の健全性自動検証**: 同期完了直後に、マニフェスト整合性、コア依存関係、自動テストスイート（`npm test`）を実行し、プロジェクトが正常に機能し続けることを保証します。
+
+### 開発ワークフロー
+
 1. 本リポジトリをフォークします。
-2. フィーチャーブランチを作成します：
+2. 最新のアップストリームと同期します：
+   ```bash
+   npm run sync
+   ```
+3. フィーチャーブランチを作成します：
    ```bash
    git checkout -b feature/model-optimization
    ```
-3. 変更をコミットします：
+4. 自動テストスイートを実行します：
+   ```bash
+   npm test
+   ```
+5. 変更をコミットします：
    ```bash
    git commit -m "feat(ai): optimize thresholding heuristics for crosswalks"
    ```
-4. ブランチをプッシュします：
+6. ブランチをプッシュします：
    ```bash
    git push origin feature/model-optimization
    ```
-5. Pull Request を作成し、変更内容を詳細に記述してください。
+7. Pull Request を作成し、変更内容を詳細に記述してください。
 
 ---
 

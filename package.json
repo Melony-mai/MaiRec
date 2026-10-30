@@ -1,0 +1,31 @@
+{
+  "name": "mairec",
+  "version": "1.31.0",
+  "description": "High-Performance On-Device reCAPTCHA v2 Solver & Distributed Remote Worker for Chromium Browsers",
+  "type": "module",
+  "main": "scripts/sync.mjs",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "iterate": "node scripts/sync.mjs",
+    "sync:check": "node scripts/sync.mjs --check",
+    "test": "node test/test_layout_and_functionality.mjs && node test/test_resolution_layout.mjs && node test/test_i18n.mjs && node test/test_theme.mjs && node test/test_sync_iteration.mjs",
+    "test:quick": "node test/test_layout_and_functionality.mjs && node test/test_i18n.mjs && node test/test_sync_iteration.mjs",
+    "test:sync": "node test/test_sync_iteration.mjs",
+    "benchmark": "node test/benchmark_model_warmup.mjs"
+  },
+  "keywords": [
+    "recaptcha",
+    "captcha-solver",
+    "chrome-extension",
+    "onnx",
+    "webassembly",
+    "manifest-v3",
+    "cdp"
+  ],
+  "author": "Melony-mai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Melony-mai/MaiRec.git"
+  }
+}
