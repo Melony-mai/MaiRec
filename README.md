@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/version-v1.2-informational?logo=semantic-release&logoColor=white" alt="Version v1.2" /></a>
+  <a href="#features"><img src="https://img.shields.io/badge/version-v1.3-informational?logo=semantic-release&logoColor=white" alt="Version v1.3" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>

@@ -48,12 +48,22 @@ body {
   overflow-y: auto;
 }
 
+/* Page Containers */
+#page_main,
+#page_reports,
+#page_timeouts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 /* Header & Branding */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2px 2px;
+  margin-bottom: 6px;
 }
 
 .brand {

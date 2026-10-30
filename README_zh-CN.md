@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.2-informational?logo=semantic-release&logoColor=white" alt="Version v1.2" /></a>
+  <a href="#核心特性"><img src="https://img.shields.io/badge/版本-v1.3-informational?logo=semantic-release&logoColor=white" alt="Version v1.3" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#核心特性"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技术架构与实现原理"><img src="https://img.shields.io/badge/推理引擎-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
