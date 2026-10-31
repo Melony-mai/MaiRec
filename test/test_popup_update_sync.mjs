@@ -56,8 +56,8 @@ async function main() {
     }
     // Check that button is inside .brand next to version badge
     const brandBlock = html.slice(html.indexOf('<div class="brand">'), html.indexOf('</div>', html.indexOf('<div class="brand">')));
-    if (!brandBlock.includes('class="badge">v1.31</span>')) {
-      throw new Error('.brand does not contain version badge v1.31');
+    if (!brandBlock.includes('class="badge">v1.5</span>')) {
+      throw new Error('.brand does not contain version badge v1.5');
     }
     if (!brandBlock.includes('id="check_update_btn"')) {
       throw new Error('.brand does not contain check_update_btn next to version badge');
@@ -152,8 +152,8 @@ async function main() {
     fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
     fs.mkdirSync(path.join(upstreamWorking, 'test'), { recursive: true });
 
-    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
-    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.html'), '<!DOCTYPE html><html></html>');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.js'), '// popup');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.css'), '/* css */');
@@ -164,7 +164,7 @@ async function main() {
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/grid.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/motorcycles_b1.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/db/captcha.sqlite'), 'mock-sqlite');
-    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.31\n');
+    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.5\n');
 
     execSync('git add .', { cwd: upstreamWorking });
     execSync('git commit -m "feat: initial commit for update test"', { cwd: upstreamWorking });
@@ -509,7 +509,7 @@ async function main() {
       })).result.value;
 
       if (!domCheck.btnExists) throw new Error('check_update_btn not found in DOM');
-      if (domCheck.badgeText !== 'v1.31') throw new Error(`Badge text mismatch: ${domCheck.badgeText}`);
+      if (domCheck.badgeText !== 'v1.5') throw new Error(`Badge text mismatch: ${domCheck.badgeText}`);
       const validInitialTexts = ['Check for Updates', '检查更新', '更新を確認'];
       if (!validInitialTexts.includes(domCheck.btnText)) {
         throw new Error(`Initial button text mismatch: ${domCheck.btnText}`);
@@ -767,7 +767,7 @@ async function main() {
     execSync(`cp -r "${EXT_PATH}" "${upstreamWorking}/"`);
     execSync(`cp -r "${path.join(PROJECT_ROOT, 'scripts')}" "${upstreamWorking}/"`);
     fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
-    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
 
     execSync('git add .', { cwd: upstreamWorking });
     execSync('git commit -m "feat: initial commit for e2e"', { cwd: upstreamWorking });

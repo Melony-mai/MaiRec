@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.31-informational?logo=semantic-release&logoColor=white" alt="Version v1.31" /></a>
+  <a href="#主な機能"><img src="https://img.shields.io/badge/バージョン-v1.5-informational?logo=semantic-release&logoColor=white" alt="Version v1.5" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#主な機能"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#技術アーキテクチャと内部構造"><img src="https://img.shields.io/badge/推論エンジン-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>

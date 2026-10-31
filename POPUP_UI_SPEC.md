@@ -226,7 +226,7 @@ Each page container inherits the exact same vertical flex layout:
     <div class="brand">
       <img src="icon/32.png" alt="App" class="brand-icon" width="22" height="22">
       <h1>AppName</h1>
-      <span class="badge">v1.31</span>
+      <span class="badge">v1.5</span>
       <button id="check_update_btn" class="mac-btn-update" type="button" aria-label="Check for Updates">
         <svg class="update-icon" viewBox="0 0 24 24" ...></svg>
         <span id="update_btn_text">Check for Updates</span>

@@ -131,6 +131,10 @@ async function initI18n() {
   }
   applyTranslations(currentLang);
   updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+  updateRepKeyLabel();
+  if (currentSyncState) {
+    renderSyncUI(currentSyncState);
+  }
 }
 
 initI18n();
@@ -167,6 +171,10 @@ chrome.storage.local.get(['settings', 'language', 'theme']).then(({ settings = {
     if (langSelect) langSelect.value = currentLang;
     applyTranslations(currentLang);
     updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+    updateRepKeyLabel();
+    if (currentSyncState) {
+      renderSyncUI(currentSyncState);
+    }
   }
 
   const savedTheme = theme || settings.theme;

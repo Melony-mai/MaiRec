@@ -112,5 +112,35 @@
   },
   "theme_toggle_to_dark": {
     "message": "ダークモードに切り替え"
+  },
+  "btn_check_updates": {
+    "message": "更新を確認"
+  },
+  "btn_sync_now": {
+    "message": "今すぐ更新"
+  },
+  "btn_retry": {
+    "message": "再試行"
+  },
+  "status_checking": {
+    "message": "確認中..."
+  },
+  "status_up_to_date": {
+    "message": "最新の状態です"
+  },
+  "status_update_available": {
+    "message": "更新が利用可能"
+  },
+  "status_syncing": {
+    "message": "同期中..."
+  },
+  "status_update_failed": {
+    "message": "更新に失敗しました"
+  },
+  "status_conflict": {
+    "message": "同期の競合が検出されました"
+  },
+  "status_network_error": {
+    "message": "ネットワーク接続エラー"
   }
 }

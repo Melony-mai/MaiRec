@@ -48,7 +48,7 @@ async function run() {
     execSync(`cp -r "${path.join(PROJECT_ROOT, 'extension')}" "${upstreamDir}/"`);
     execSync(`cp -r "${path.join(PROJECT_ROOT, 'scripts')}" "${upstreamDir}/"`);
     fs.mkdirSync(path.join(upstreamDir, 'ws-addon'), { recursive: true });
-    fs.writeFileSync(path.join(upstreamDir, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
+    fs.writeFileSync(path.join(upstreamDir, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
 
     execSync('git add .', { cwd: upstreamDir });
     execSync('git commit -m "feat: initial upstream release"', { cwd: upstreamDir });

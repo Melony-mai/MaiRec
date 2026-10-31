@@ -112,5 +112,35 @@
   },
   "theme_toggle_to_dark": {
     "message": "Switch to dark mode"
+  },
+  "btn_check_updates": {
+    "message": "Check for Updates"
+  },
+  "btn_sync_now": {
+    "message": "Update Now"
+  },
+  "btn_retry": {
+    "message": "Retry"
+  },
+  "status_checking": {
+    "message": "Checking..."
+  },
+  "status_up_to_date": {
+    "message": "Up to date"
+  },
+  "status_update_available": {
+    "message": "Update available"
+  },
+  "status_syncing": {
+    "message": "Synchronizing..."
+  },
+  "status_update_failed": {
+    "message": "Update failed"
+  },
+  "status_conflict": {
+    "message": "Sync conflict detected"
+  },
+  "status_network_error": {
+    "message": "Network connection error"
   }
 }

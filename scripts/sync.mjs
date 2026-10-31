@@ -928,7 +928,8 @@ export async function runNativeMessagingHost(options = {}) {
             relation: checkRes.relation,
             localHead: checkRes.localHead,
             remoteHead: checkRes.remoteHead,
-            updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT'
+            updateAvailable: checkRes.relation === 'BEHIND' || checkRes.relation === 'DIVERGED' || checkRes.relation === 'INITIAL_CHECKOUT',
+            error: checkRes.error
           });
         } else if (action === 'sync') {
           const syncRes = await syncRepository({

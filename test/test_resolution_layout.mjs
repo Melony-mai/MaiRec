@@ -116,8 +116,8 @@ async function runLayoutTests() {
         returnByValue: true
       })).result.value;
 
-      if (metrics.badgeText !== 'v1.31') {
-        throw new Error(`Badge text expected 'v1.31', got '${metrics.badgeText}'`);
+      if (metrics.badgeText !== 'v1.5') {
+        throw new Error(`Badge text expected 'v1.5', got '${metrics.badgeText}'`);
       }
       if (metrics.headerToSolverSection < 16) {
         throw new Error(`Spacing too small between header and solver section: ${metrics.headerToSolverSection}px`);

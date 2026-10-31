@@ -112,5 +112,35 @@
   },
   "theme_toggle_to_dark": {
     "message": "切换到深色模式"
+  },
+  "btn_check_updates": {
+    "message": "检查更新"
+  },
+  "btn_sync_now": {
+    "message": "立即更新"
+  },
+  "btn_retry": {
+    "message": "重试"
+  },
+  "status_checking": {
+    "message": "正在检查..."
+  },
+  "status_up_to_date": {
+    "message": "已是最新版本"
+  },
+  "status_update_available": {
+    "message": "有新版本可用"
+  },
+  "status_syncing": {
+    "message": "正在同步..."
+  },
+  "status_update_failed": {
+    "message": "更新失败"
+  },
+  "status_conflict": {
+    "message": "检测到同步冲突"
+  },
+  "status_network_error": {
+    "message": "网络连接错误"
   }
 }

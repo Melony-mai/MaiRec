@@ -11,7 +11,7 @@ export const DEFAULT_GITHUB_API_URL = 'https://api.github.com/repos/Melony-mai/M
 export const SYNC_STATE_STORAGE_KEY = 'sync_state';
 export const SYNC_SERVER_URL_STORAGE_KEY = 'sync_server_url';
 export const GITHUB_TOKEN_STORAGE_KEY = 'github_token';
-export const CURRENT_LOCAL_VERSION = 'v1.31';
+export const CURRENT_LOCAL_VERSION = 'v1.5';
 export const CURRENT_LOCAL_COMMIT = 'c907a6aa';
 
 /**

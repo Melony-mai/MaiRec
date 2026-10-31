@@ -85,8 +85,8 @@ async function main() {
     fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
     fs.mkdirSync(path.join(upstreamWorking, 'test'), { recursive: true });
 
-    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
-    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.31' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.html'), '<!DOCTYPE html><html></html>');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.js'), '// popup');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.css'), '/* css */');
@@ -96,7 +96,7 @@ async function main() {
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/grid.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/motorcycles_b1.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/db/captcha.sqlite'), 'mock-sqlite');
-    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.31\n');
+    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.5\n');
 
     execSync('git add .', { cwd: upstreamWorking });
     execSync('git commit -m "feat: initial commit"', { cwd: upstreamWorking });
