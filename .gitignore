@@ -42,6 +42,8 @@ build/
 *.pid
 *.seed
 *.pid.lock
+.node_path
+scripts/.node_path
 
 # AI Assistant & Local Tooling
 **/.claude/

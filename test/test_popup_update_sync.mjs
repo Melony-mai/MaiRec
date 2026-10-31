@@ -419,7 +419,7 @@ async function main() {
   // 5. Test Live Popup Rendering & User Interaction in Chrome via CDP
   await runTest('Verify Popup UI interaction, button state, and responsive layout in headless Chromium', async () => {
     const testProfile = '/tmp/test-profile-popup-sync-' + Date.now();
-    registerNativeMessagingHost({ profileDir: testProfile });
+    registerNativeMessagingHost({ profileDir: testProfile, profileOnly: true });
     const chrome = spawn(CHROME_PATH, [
       '--headless=new',
       '--remote-debugging-port=9244',
@@ -946,6 +946,11 @@ async function main() {
       spawnSync('pkill', ['-f', 'sync.mjs --serve']);
     }
   });
+
+  // Ensure native messaging host for workspace is restored and registered
+  try {
+    registerNativeMessagingHost({ cwd: PROJECT_ROOT, forceGlobal: true });
+  } catch (_) {}
 
   console.log('\n=== ALL MANUAL UPDATE-CHECK AND SYNCHRONIZATION TESTS PASSED! ===\n');
 }

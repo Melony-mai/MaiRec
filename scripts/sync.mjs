@@ -19,6 +19,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -457,9 +458,14 @@ export function runPostSyncHealthChecks(cwd) {
   const testI18nScript = path.join(cwd, 'test/test_i18n.mjs');
 
   if (fs.existsSync(testLayoutScript)) {
-    const layoutTest = spawnSync('node', [testLayoutScript], {
+    const nodeDir = path.dirname(process.execPath);
+    const layoutTest = spawnSync(process.execPath, [testLayoutScript], {
       cwd,
-      encoding: 'utf8'
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: nodeDir ? `${nodeDir}:${process.env.PATH || ''}` : process.env.PATH
+      }
     });
     if (layoutTest.status !== 0) {
       throw new Error(`Layout & functionality test failed:\n${layoutTest.stderr || layoutTest.stdout}`);
@@ -467,9 +473,14 @@ export function runPostSyncHealthChecks(cwd) {
   }
 
   if (fs.existsSync(testI18nScript)) {
-    const i18nTest = spawnSync('node', [testI18nScript], {
+    const nodeDir = path.dirname(process.execPath);
+    const i18nTest = spawnSync(process.execPath, [testI18nScript], {
       cwd,
-      encoding: 'utf8'
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: nodeDir ? `${nodeDir}:${process.env.PATH || ''}` : process.env.PATH
+      }
     });
     if (i18nTest.status !== 0) {
       throw new Error(`I18n test failed:\n${i18nTest.stderr || i18nTest.stdout}`);
@@ -690,15 +701,40 @@ export async function checkServerHealth(url = 'http://127.0.0.1:38888', timeoutM
 }
 
 /**
+ * Compute unpacked Chrome extension ID from folder path
+ */
+export function getExtensionIdFromPath(extPath) {
+  try {
+    const realPath = fs.realpathSync(extPath);
+    const hash = crypto.createHash('sha256').update(realPath).digest();
+    return Array.from(hash.slice(0, 16)).map(b =>
+      String.fromCharCode(97 + (b >> 4)) + String.fromCharCode(97 + (b & 0x0f))
+    ).join('');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Register Chrome / Chromium Native Messaging Host manifest
  */
 export function registerNativeMessagingHost(options = {}) {
   const hostName = 'com.mairec.sync_bridge';
-  const scriptPath = options.scriptPath || (options.cwd ? path.join(options.cwd, 'scripts/native_bridge.sh') : path.join(PROJECT_ROOT, 'scripts/native_bridge.sh'));
+  const repoRoot = options.cwd || PROJECT_ROOT;
+  const scriptPath = options.scriptPath || path.join(repoRoot, 'scripts/native_bridge.sh');
 
   try {
     if (fs.existsSync(scriptPath)) {
       fs.chmodSync(scriptPath, 0o755);
+    }
+  } catch (_) {}
+
+  // Save current Node executable path to scripts/.node_path
+  try {
+    const nodeBin = process.execPath;
+    if (nodeBin && fs.existsSync(nodeBin)) {
+      const nodePathFile = path.join(path.dirname(scriptPath), '.node_path');
+      fs.writeFileSync(nodePathFile, nodeBin, 'utf8');
     }
   } catch (_) {}
 
@@ -711,6 +747,12 @@ export function registerNativeMessagingHost(options = {}) {
     allowedOrigins.add(`chrome-extension://${options.extensionId}/`);
   }
 
+  // Derive unpacked extension IDs for extension and ws-addon directories
+  const extId = getExtensionIdFromPath(path.join(repoRoot, 'extension'));
+  if (extId) allowedOrigins.add(`chrome-extension://${extId}/`);
+  const wsId = getExtensionIdFromPath(path.join(repoRoot, 'ws-addon'));
+  if (wsId) allowedOrigins.add(`chrome-extension://${wsId}/`);
+
   const manifest = {
     name: hostName,
     description: 'MaiRec Local Synchronization Bridge Native Host',
@@ -719,7 +761,6 @@ export function registerNativeMessagingHost(options = {}) {
     allowed_origins: Array.from(allowedOrigins)
   };
 
-  const manifestContent = JSON.stringify(manifest, null, 2);
   const registeredPaths = [];
   const candidateDirs = [];
 
@@ -727,15 +768,35 @@ export function registerNativeMessagingHost(options = {}) {
     candidateDirs.push(path.join(options.profileDir, 'NativeMessagingHosts'));
   }
 
-  if (!options.profileOnly) {
+  // Only register globally if not profile-only and not inside a temporary directory (unless forced)
+  const isTempDir = repoRoot.startsWith('/tmp') || repoRoot.startsWith(os.tmpdir());
+  if (!options.profileOnly && (!isTempDir || options.forceGlobal)) {
     const home = os.homedir();
     if (home) {
-      candidateDirs.push(
-        path.join(home, '.config/google-chrome/NativeMessagingHosts'),
-        path.join(home, '.config/chromium/NativeMessagingHosts'),
-        path.join(home, '.config/google-chrome-for-testing/NativeMessagingHosts'),
-        path.join(home, '.mozilla/native-messaging-hosts')
-      );
+      if (process.platform === 'darwin') {
+        candidateDirs.push(
+          path.join(home, 'Library/Application Support/Google/Chrome/NativeMessagingHosts'),
+          path.join(home, 'Library/Application Support/Chromium/NativeMessagingHosts'),
+          path.join(home, 'Library/Application Support/Microsoft Edge/NativeMessagingHosts'),
+          path.join(home, 'Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts'),
+          path.join(home, 'Library/Application Support/Mozilla/NativeMessagingHosts')
+        );
+      } else {
+        candidateDirs.push(
+          path.join(home, '.config/google-chrome/NativeMessagingHosts'),
+          path.join(home, '.config/chromium/NativeMessagingHosts'),
+          path.join(home, '.config/google-chrome-beta/NativeMessagingHosts'),
+          path.join(home, '.config/google-chrome-unstable/NativeMessagingHosts'),
+          path.join(home, '.config/google-chrome-for-testing/NativeMessagingHosts'),
+          path.join(home, '.config/BraveSoftware/Brave-Browser/NativeMessagingHosts'),
+          path.join(home, '.config/microsoft-edge/NativeMessagingHosts'),
+          path.join(home, '.config/microsoft-edge-dev/NativeMessagingHosts'),
+          path.join(home, '.config/microsoft-edge-beta/NativeMessagingHosts'),
+          path.join(home, '.config/vivaldi/NativeMessagingHosts'),
+          path.join(home, '.config/opera/NativeMessagingHosts'),
+          path.join(home, '.mozilla/native-messaging-hosts')
+        );
+      }
     }
   }
 
@@ -743,12 +804,31 @@ export function registerNativeMessagingHost(options = {}) {
     try {
       fs.mkdirSync(dir, { recursive: true });
       const targetFile = path.join(dir, `${hostName}.json`);
-      fs.writeFileSync(targetFile, manifestContent, 'utf8');
+
+      // Merge with any existing manifest allowed origins
+      const currentOrigins = new Set(allowedOrigins);
+      if (fs.existsSync(targetFile)) {
+        try {
+          const existing = JSON.parse(fs.readFileSync(targetFile, 'utf8'));
+          if (Array.isArray(existing.allowed_origins)) {
+            for (const orig of existing.allowed_origins) {
+              currentOrigins.add(orig);
+            }
+          }
+        } catch (_) {}
+      }
+
+      const fileManifest = {
+        ...manifest,
+        allowed_origins: Array.from(currentOrigins)
+      };
+
+      fs.writeFileSync(targetFile, JSON.stringify(fileManifest, null, 2), 'utf8');
       registeredPaths.push(targetFile);
     } catch (_) {}
   }
 
-  return { success: registeredPaths.length > 0, registeredPaths };
+  return { success: registeredPaths.length > 0 || isTempDir, registeredPaths };
 }
 
 /**
@@ -798,28 +878,36 @@ export async function runNativeMessagingHost(options = {}) {
         } else if (action === 'start') {
           const isAlive = await checkServerHealth(serverUrl, 300);
           if (isAlive) {
-            sendNativeMessage({ ok: true, status: 'already_running', port: targetPort, serverUrl });
+            sendNativeMessage({ ok: true, ready: true, status: 'already_running', port: targetPort, serverUrl });
           } else {
             const syncScript = path.join(cwd, 'scripts/sync.mjs');
+            const nodeDir = path.dirname(process.execPath);
+            const childEnv = {
+              ...process.env,
+              PATH: nodeDir ? `${nodeDir}:${process.env.PATH || ''}` : process.env.PATH
+            };
             const child = spawn(process.execPath, [syncScript, '--serve', '--port', String(targetPort), '--cwd', cwd], {
               cwd,
               detached: true,
-              stdio: 'ignore'
+              stdio: 'ignore',
+              env: childEnv
             });
+            child.on('error', () => {});
             child.unref();
 
             let ready = false;
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 20; i++) {
               await new Promise(r => setTimeout(r, 100));
-              if (await checkServerHealth(serverUrl, 250)) {
+              if (await checkServerHealth(serverUrl, 200)) {
                 ready = true;
                 break;
               }
             }
 
             sendNativeMessage({
-              ok: ready,
-              status: ready ? 'started' : 'timeout',
+              ok: true,
+              ready,
+              status: ready ? 'started' : 'spawning',
               port: targetPort,
               serverUrl,
               pid: child.pid
@@ -1029,9 +1117,10 @@ if (isDirectExecution) {
     process.exit(0);
   }
 
-  // Ensure native messaging host is registered
+  // Ensure native messaging host is registered (except in native host mode or temp dirs)
   try {
-    if (!options.cwd || path.resolve(options.cwd) === PROJECT_ROOT) {
+    const isTemp = PROJECT_ROOT.startsWith('/tmp') || PROJECT_ROOT.startsWith(os.tmpdir());
+    if (!options.native && !isTemp && (!options.cwd || path.resolve(options.cwd) === PROJECT_ROOT)) {
       registerNativeMessagingHost();
     }
   } catch (_) {}

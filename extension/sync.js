@@ -79,7 +79,7 @@ export async function ensureSyncBridgeRunning(options = {}) {
     const urlObj = new URL(serverUrl);
     port = parseInt(urlObj.port, 10) || 38888;
   } catch {}
-  const timeoutMs = options.timeoutMs || 3500;
+  const timeoutMs = options.timeoutMs || 4000;
 
   // Step 1: Rapid health check to verify if server is already active
   try {
@@ -111,20 +111,21 @@ export async function ensureSyncBridgeRunning(options = {}) {
         );
       });
 
-      const started = await Promise.race([
+      await Promise.race([
         nativePromise,
-        new Promise((resolve) => setTimeout(() => resolve(false), 2000))
+        new Promise((resolve) => setTimeout(() => resolve(false), Math.min(timeoutMs, 3000)))
       ]);
 
-      if (started) {
-        const startWait = Date.now();
-        while (Date.now() - startWait < timeoutMs) {
-          try {
-            const pollRes = await fetch(`${serverUrl}/health`);
-            if (pollRes.ok) return true;
-          } catch {}
-          await new Promise(r => setTimeout(r, 100));
-        }
+      const startWait = Date.now();
+      while (Date.now() - startWait < timeoutMs) {
+        try {
+          const pollRes = await fetch(`${serverUrl}/health`);
+          if (pollRes.ok) {
+            const data = await pollRes.json();
+            if (data && data.ok) return true;
+          }
+        } catch {}
+        await new Promise(r => setTimeout(r, 120));
       }
     } catch {}
   }
@@ -156,7 +157,10 @@ export async function ensureSyncBridgeRunning(options = {}) {
       while (Date.now() - startWait < timeoutMs) {
         try {
           const pollRes = await fetch(`${serverUrl}/health`);
-          if (pollRes.ok) return true;
+          if (pollRes.ok) {
+            const data = await pollRes.json();
+            if (data && data.ok) return true;
+          }
         } catch {}
         await new Promise(r => setTimeout(r, 100));
       }
@@ -166,7 +170,10 @@ export async function ensureSyncBridgeRunning(options = {}) {
   // Final check
   try {
     const finalRes = await fetch(`${serverUrl}/health`);
-    if (finalRes.ok) return true;
+    if (finalRes.ok) {
+      const data = await finalRes.json();
+      if (data && data.ok) return true;
+    }
   } catch {}
 
   return false;
@@ -185,7 +192,7 @@ export async function checkUpdates(options = {}) {
   let bridgeContacted = false;
   try {
     if (shouldAutoStart) {
-      await ensureSyncBridgeRunning({ serverUrl, timeoutMs: Math.min(timeoutMs, 2500) });
+      await ensureSyncBridgeRunning({ serverUrl, timeoutMs: Math.min(timeoutMs, 4000) });
     }
 
     const controller = new AbortController();
@@ -222,7 +229,9 @@ export async function checkUpdates(options = {}) {
   if (!bridgeContacted && typeof chrome !== 'undefined' && chrome.runtime?.sendNativeMessage && shouldAutoStart) {
     try {
       const nmData = await new Promise((resolve, reject) => {
+        const nmTimer = setTimeout(() => reject(new Error('Native messaging check timeout')), 8000);
         chrome.runtime.sendNativeMessage('com.mairec.sync_bridge', { action: 'check' }, (res) => {
+          clearTimeout(nmTimer);
           const err = chrome.runtime.lastError;
           if (err || !res) reject(new Error(err?.message || 'Empty NM response'));
           else resolve(res);
@@ -322,7 +331,7 @@ export async function synchronizeProject(options = {}) {
 
   // Step 1: Ensure sync bridge server is active (auto-start if stopped)
   if (shouldAutoStart) {
-    await ensureSyncBridgeRunning({ serverUrl, timeoutMs: 3500 });
+    await ensureSyncBridgeRunning({ serverUrl, timeoutMs: 4000 });
   }
 
   try {
@@ -376,7 +385,9 @@ export async function synchronizeProject(options = {}) {
     if (typeof chrome !== 'undefined' && chrome.runtime?.sendNativeMessage && shouldAutoStart) {
       try {
         const nmData = await new Promise((resolve, reject) => {
+          const nmTimeout = setTimeout(() => reject(new Error('Native messaging sync timeout')), timeoutMs);
           chrome.runtime.sendNativeMessage('com.mairec.sync_bridge', { action: 'sync' }, (res) => {
+            clearTimeout(nmTimeout);
             const lastErr = chrome.runtime.lastError;
             if (lastErr || !res) reject(new Error(lastErr?.message || 'Empty NM sync response'));
             else resolve(res);
