@@ -70,8 +70,15 @@ export function initSystemThemeListener(callback) {
   let lastTheme = darkQuery.matches ? 'dark' : 'light';
 
   const checkTheme = () => {
-    const current = darkQuery.matches ? 'dark' : 'light';
-    if (current !== lastTheme) {
+    const current = getSystemTheme();
+    const effective = (typeof document !== 'undefined' && document.documentElement)
+      ? document.documentElement.getAttribute('data-theme')
+      : null;
+    const pref = (typeof document !== 'undefined' && document.documentElement)
+      ? document.documentElement.getAttribute('data-theme-preference')
+      : null;
+
+    if (current !== lastTheme || (pref === 'system' && effective && effective !== current)) {
       lastTheme = current;
       callback(current);
     }
@@ -93,7 +100,7 @@ export function initSystemThemeListener(callback) {
   }
 
   // Polling fallback to guarantee instant reaction across all Chromium environments and OS bridges
-  const timer = setInterval(checkTheme, 150);
+  const timer = setInterval(checkTheme, 100);
 
   return () => {
     if (darkQuery.removeEventListener) {

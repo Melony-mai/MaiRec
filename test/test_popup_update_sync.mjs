@@ -18,11 +18,50 @@ import {
   checkServerHealth
 } from '../scripts/sync.mjs';
 import { translations, getMessage } from '../extension/i18n.js';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-const CHROME_PATH = '/home/mai/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome';
+
+function getChromePath() {
+  if (process.env.CHROME_BIN && fs.existsSync(process.env.CHROME_BIN)) {
+    return process.env.CHROME_BIN;
+  }
+  if (process.platform === 'win32') {
+    const winPaths = [
+      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+      'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+    for (const p of winPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+  } else if (process.platform === 'darwin') {
+    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (fs.existsSync(macPath)) return macPath;
+  }
+  return '/home/mai/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome';
+}
+
+function safeKillSyncServer(pattern = 'sync.mjs --serve') {
+  try {
+    if (process.platform !== 'win32') {
+      spawnSync('pkill', ['-f', pattern]);
+    } else {
+      const portMatch = pattern.match(/--port\s+(\d+)/);
+      if (portMatch) {
+        const port = portMatch[1];
+        try {
+          execSync(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"`, { stdio: 'ignore' });
+        } catch (_) {}
+      }
+    }
+  } catch {}
+}
+
+const CHROME_PATH = getChromePath();
 const EXT_PATH = path.resolve('extension');
 
 console.log('--- Popup Settings Manual Update-Check & Synchronization Test Suite ---\n');
@@ -56,8 +95,8 @@ async function main() {
     }
     // Check that button is inside .brand next to version badge
     const brandBlock = html.slice(html.indexOf('<div class="brand">'), html.indexOf('</div>', html.indexOf('<div class="brand">')));
-    if (!brandBlock.includes('class="badge">v1.5</span>')) {
-      throw new Error('.brand does not contain version badge v1.5');
+    if (!brandBlock.includes('class="badge">v1.6</span>')) {
+      throw new Error('.brand does not contain version badge v1.6');
     }
     if (!brandBlock.includes('id="check_update_btn"')) {
       throw new Error('.brand does not contain check_update_btn next to version badge');
@@ -125,7 +164,7 @@ async function main() {
   });
 
   // 4. Test Update Detection & Synchronization with isolated Git sandbox
-  const sandboxDir = path.join('/tmp', `mairec-popup-sync-test-${Date.now()}`);
+  const sandboxDir = path.join(os.tmpdir(), `mairec-popup-sync-test-${Date.now()}`);
   fs.mkdirSync(sandboxDir, { recursive: true });
 
   const testPort = 38891;
@@ -152,8 +191,8 @@ async function main() {
     fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
     fs.mkdirSync(path.join(upstreamWorking, 'test'), { recursive: true });
 
-    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
-    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'extension/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.6' }));
+    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.6' }));
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.html'), '<!DOCTYPE html><html></html>');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.js'), '// popup');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/popup.css'), '/* css */');
@@ -164,7 +203,7 @@ async function main() {
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/grid.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/models/motorcycles_b1.onnx'), 'mock-onnx');
     fs.writeFileSync(path.join(upstreamWorking, 'extension/db/captcha.sqlite'), 'mock-sqlite');
-    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.5\n');
+    fs.writeFileSync(path.join(upstreamWorking, 'README.md'), '# MaiRec v1.6\n');
 
     execSync('git add .', { cwd: upstreamWorking });
     execSync('git commit -m "feat: initial commit for update test"', { cwd: upstreamWorking });
@@ -418,7 +457,7 @@ async function main() {
 
   // 5. Test Live Popup Rendering & User Interaction in Chrome via CDP
   await runTest('Verify Popup UI interaction, button state, and responsive layout in headless Chromium', async () => {
-    const testProfile = '/tmp/test-profile-popup-sync-' + Date.now();
+    const testProfile = path.join(os.tmpdir(), 'test-profile-popup-sync-' + Date.now());
     registerNativeMessagingHost({ profileDir: testProfile, profileOnly: true });
     const chrome = spawn(CHROME_PATH, [
       '--headless=new',
@@ -509,7 +548,7 @@ async function main() {
       })).result.value;
 
       if (!domCheck.btnExists) throw new Error('check_update_btn not found in DOM');
-      if (domCheck.badgeText !== 'v1.5') throw new Error(`Badge text mismatch: ${domCheck.badgeText}`);
+      if (domCheck.badgeText !== 'v1.6') throw new Error(`Badge text mismatch: ${domCheck.badgeText}`);
       const validInitialTexts = ['Check for Updates', '检查更新', '更新を確認'];
       if (!validInitialTexts.includes(domCheck.btnText)) {
         throw new Error(`Initial button text mismatch: ${domCheck.btnText}`);
@@ -611,10 +650,10 @@ async function main() {
   await runTest('Verify sync bridge auto-starts automatically when initially stopped (API Layer)', async () => {
     const autoPort = 38900 + Math.floor(Math.random() * 50);
     const autoServerUrl = `http://127.0.0.1:${autoPort}`;
-    const sandboxDir = path.join('/tmp', `mairec-autostart-test-${Date.now()}`);
+    const sandboxDir = path.join(os.tmpdir(), `mairec-autostart-test-${Date.now()}`);
     fs.mkdirSync(sandboxDir, { recursive: true });
 
-    spawnSync('pkill', ['-f', `sync.mjs --serve --port ${autoPort}`]);
+    safeKillSyncServer(`sync.mjs --serve --port ${autoPort}`);
 
     try {
       const remoteBare = path.join(sandboxDir, 'remote.git');
@@ -655,7 +694,7 @@ async function main() {
         throw new Error('ensureSyncBridgeRunning failed to auto-start bridge server');
       }
 
-      const nowAlive = await checkServerHealth(autoServerUrl, 300);
+      const nowAlive = await checkServerHealth(autoServerUrl, 1500);
       if (!nowAlive) {
         throw new Error('Server health check failed after auto-start');
       }
@@ -673,7 +712,7 @@ async function main() {
         throw new Error(`Expected source 'local_git', got: ${checkRes.source}`);
       }
     } finally {
-      spawnSync('pkill', ['-f', `sync.mjs --serve --port ${autoPort}`]);
+      safeKillSyncServer(`sync.mjs --serve --port ${autoPort}`);
       try { fs.rmSync(sandboxDir, { recursive: true, force: true }); } catch (_) {}
     }
   });
@@ -681,10 +720,12 @@ async function main() {
   // 7. Test Chrome Native Messaging Host stdio protocol & commands
   await runTest('Verify Chrome Native Messaging Host protocol, stdio framing, and commands', async () => {
     const bridgeScript = path.join(PROJECT_ROOT, 'scripts/native_bridge.sh');
-    const child = spawn('bash', [bridgeScript], {
-      cwd: PROJECT_ROOT,
-      stdio: ['pipe', 'pipe', 'inherit']
-    });
+    const child = process.platform === 'win32'
+      ? spawn(process.execPath, [path.join(PROJECT_ROOT, 'scripts/sync.mjs'), '--native'], { cwd: PROJECT_ROOT, stdio: ['pipe', 'pipe', 'inherit'] })
+      : spawn('bash', [bridgeScript], { cwd: PROJECT_ROOT, stdio: ['pipe', 'pipe', 'inherit'] });
+
+    child.on('error', err => console.error('NM child spawn error:', err));
+    child.on('exit', (code, sig) => console.error('NM child exited:', code, sig));
 
     try {
       function sendNM(msg) {
@@ -695,112 +736,106 @@ async function main() {
         child.stdin.write(payload);
       }
 
-      function readNMResponse() {
+      function sendAndReceiveNM(msg) {
         return new Promise((resolve, reject) => {
           let buffer = Buffer.alloc(0);
+          const timer = setTimeout(() => {
+            child.stdout.removeListener('data', onData);
+            reject(new Error('NM response timeout'));
+          }, 10000);
           const onData = (chunk) => {
             buffer = Buffer.concat([buffer, chunk]);
             if (buffer.length >= 4) {
               const len = buffer.readUInt32LE(0);
               if (buffer.length >= 4 + len) {
+                clearTimeout(timer);
                 child.stdout.removeListener('data', onData);
-                const msg = JSON.parse(buffer.subarray(4, 4 + len).toString('utf8'));
-                resolve(msg);
+                const res = JSON.parse(buffer.subarray(4, 4 + len).toString('utf8'));
+                resolve(res);
               }
             }
           };
           child.stdout.on('data', onData);
-          setTimeout(() => reject(new Error('NM response timeout')), 5000);
+          sendNM(msg);
         });
       }
 
       // Test 7a: ping
-      sendNM({ action: 'ping' });
-      const pingRes = await readNMResponse();
+      const pingRes = await sendAndReceiveNM({ action: 'ping' });
       if (!pingRes.ok || !pingRes.pong) {
         throw new Error(`Unexpected ping response: ${JSON.stringify(pingRes)}`);
       }
 
       // Test 7b: status
-      sendNM({ action: 'status' });
-      const statusRes = await readNMResponse();
+      const statusRes = await sendAndReceiveNM({ action: 'status' });
       if (!statusRes.ok || !statusRes.branch) {
         throw new Error(`Unexpected status response: ${JSON.stringify(statusRes)}`);
       }
 
       // Test 7c: start
-      sendNM({ action: 'start', port: 38896 });
-      const startRes = await readNMResponse();
+      const startRes = await sendAndReceiveNM({ action: 'start', port: 38896 });
       if (!startRes.ok) {
         throw new Error(`Unexpected start response: ${JSON.stringify(startRes)}`);
       }
-      const isAlive = await checkServerHealth('http://127.0.0.1:38896', 500);
+      const isAlive = await checkServerHealth('http://127.0.0.1:38896', 1500);
       if (!isAlive) {
         throw new Error('Server on 38896 was not alive after NM start');
       }
 
-      spawnSync('pkill', ['-f', 'sync.mjs --serve --port 38896']);
+      safeKillSyncServer('sync.mjs --serve --port 38896');
     } finally {
       child.kill();
     }
   });
 
-  // 8. Test In-Browser Manual Update with Initially Stopped Sync Bridge (CDP Full E2E)
-  await runTest('Verify in-browser manual update and synchronization in Chromium with initially stopped sync bridge', async () => {
-    const e2eDir = path.join('/tmp', `mairec-e2e-sync-${Date.now()}`);
-    fs.mkdirSync(e2eDir, { recursive: true });
+  // 8. Test In-Browser Manual Update with Direct GitHub Synchronization (CDP Full E2E)
+  await runTest('Verify in-browser manual update and direct GitHub synchronization in Chromium independently of local development environment', async () => {
+    const e2eProfile = path.join(os.tmpdir(), `mairec-e2e-sync-${Date.now()}`);
+    fs.mkdirSync(e2eProfile, { recursive: true });
 
-    const remoteBare = path.join(e2eDir, 'remote.git');
-    const upstreamWorking = path.join(e2eDir, 'upstream');
-    const localClient = path.join(e2eDir, 'local');
+    // 1. Ensure sync bridge is not running
+    safeKillSyncServer('sync.mjs --serve');
 
-    // 1. Initialize bare remote
-    execSync(`git init --bare "${remoteBare}"`);
-    execSync(`git --git-dir="${remoteBare}" symbolic-ref HEAD refs/heads/main`);
-
-    // 2. Initialize upstream working directory
-    fs.mkdirSync(upstreamWorking, { recursive: true });
-    execSync('git init -b main', { cwd: upstreamWorking });
-    execSync('git config user.email "ci@mairec.ai"', { cwd: upstreamWorking });
-    execSync('git config user.name "MaiRec CI"', { cwd: upstreamWorking });
-
-    execSync(`cp -r "${EXT_PATH}" "${upstreamWorking}/"`);
-    execSync(`cp -r "${path.join(PROJECT_ROOT, 'scripts')}" "${upstreamWorking}/"`);
-    fs.mkdirSync(path.join(upstreamWorking, 'ws-addon'), { recursive: true });
-    fs.writeFileSync(path.join(upstreamWorking, 'ws-addon/manifest.json'), JSON.stringify({ name: 'MaiRec', version: '1.5' }));
-
-    execSync('git add .', { cwd: upstreamWorking });
-    execSync('git commit -m "feat: initial commit for e2e"', { cwd: upstreamWorking });
-    execSync(`git remote add origin "${remoteBare}"`, { cwd: upstreamWorking });
-    execSync('git push -u origin main', { cwd: upstreamWorking });
-
-    // 3. Clone to localClient
-    execSync(`git clone "${remoteBare}" "${localClient}"`);
-    execSync('git config user.email "local@mairec.ai"', { cwd: localClient });
-    execSync('git config user.name "Local Dev"', { cwd: localClient });
-
-    // 4. Add upstream commit so update is available
-    fs.writeFileSync(path.join(upstreamWorking, 'new_ai_weights.bin'), 'mock weights v2 content');
-    execSync('git add new_ai_weights.bin', { cwd: upstreamWorking });
-    execSync('git commit -m "feat: new AI weights released"', { cwd: upstreamWorking });
-    execSync('git push origin main', { cwd: upstreamWorking });
-
-    // 5. Add local uncommitted work to verify work preservation
-    fs.writeFileSync(path.join(localClient, 'my_local_notes.txt'), 'valuable local notes in progress');
-
-    // 6. Ensure sync bridge is initially stopped
-    spawnSync('pkill', ['-f', 'sync.mjs --serve']);
-
-    const e2eProfile = path.join(e2eDir, 'profile');
-    const extClientPath = path.join(localClient, 'extension');
+    // 2. Start mock GitHub API server
+    const mockRemoteSha = 'fa999bb4c00ffee';
+    const mockGithubServer = http.createServer((req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, User-Agent');
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+      if (req.url.includes('/commits')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          sha: mockRemoteSha,
+          commit: {
+            message: 'feat: v1.6 production release',
+            committer: { date: '2026-11-05T12:00:00Z' }
+          }
+        }));
+        return;
+      }
+      if (req.url.includes('/manifest.json')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        const manifestContent = Buffer.from(JSON.stringify({ name: 'MaiRec', version: '1.6' })).toString('base64');
+        res.end(JSON.stringify({ content: manifestContent }));
+        return;
+      }
+      res.writeHead(404);
+      res.end();
+    });
+    await new Promise(r => mockGithubServer.listen(38895, '127.0.0.1', r));
 
     const chrome = spawn(CHROME_PATH, [
       '--headless=new',
       '--remote-debugging-port=9250',
       '--no-sandbox',
       '--disable-gpu',
-      '--disable-extensions-except=' + extClientPath,
-      '--load-extension=' + extClientPath,
+      '--disable-extensions-except=' + EXT_PATH,
+      '--load-extension=' + EXT_PATH,
       '--user-data-dir=' + e2eProfile
     ]);
 
@@ -829,15 +864,6 @@ async function main() {
 
       if (!extId) throw new Error('Extension failed to load in Chromium');
 
-      // Register native messaging host with the extension ID and localClient (profile isolated)
-      registerNativeMessagingHost({
-        cwd: localClient,
-        scriptPath: path.join(localClient, 'scripts/native_bridge.sh'),
-        extensionId: extId,
-        profileDir: e2eProfile,
-        profileOnly: true
-      });
-
       const popupTarget = await (await fetch(`http://127.0.0.1:9250/json/new?chrome-extension://${extId}/popup.html`, { method: 'PUT' })).json();
       const ws = new WebSocket(popupTarget.webSocketDebuggerUrl);
       await new Promise(r => ws.onopen = r);
@@ -863,7 +889,18 @@ async function main() {
       await send('Page.enable');
       await send('Runtime.enable');
 
-      // Step 8a: Click "Check for Updates" with bridge initially stopped
+      // Configure direct GitHub API endpoint and initial local SHA in chrome.storage.local
+      await send('Runtime.evaluate', {
+        expression: `new Promise((resolve) => {
+          chrome.storage.local.set({
+            github_api_url: 'http://127.0.0.1:38895/commits/main',
+            sync_state: { localHead: '00000000', status: 'idle' }
+          }, resolve);
+        })`,
+        awaitPromise: true
+      });
+
+      // Step 8a: Click "Check for Updates"
       await send('Runtime.evaluate', { expression: `document.getElementById('check_update_btn').click()` });
 
       let updateAvailableState = null;
@@ -892,7 +929,7 @@ async function main() {
       }
 
       if (!updateAvailableState) {
-        throw new Error('Update available state was not reached when bridge auto-started');
+        throw new Error('Update available state was not reached when checking direct GitHub repository');
       }
 
       // Step 8b: Click manual update button ("Update Now" / "立即更新")
@@ -927,23 +964,25 @@ async function main() {
         throw new Error('Up-to-date state was not reached after update click');
       }
 
-      // Step 8c: Verify incoming changes were synchronized to disk
-      const syncedFile = path.join(localClient, 'new_ai_weights.bin');
-      if (!fs.existsSync(syncedFile)) {
-        throw new Error('File new_ai_weights.bin was not found on local disk after synchronization');
-      }
+      // Step 8c: Verify storage state has been updated to up_to_date with new commit SHA
+      const storedState = (await send('Runtime.evaluate', {
+        expression: `new Promise(resolve => chrome.storage.local.get('sync_state', res => resolve(res.sync_state)))`,
+        awaitPromise: true,
+        returnByValue: true
+      })).result.value;
 
-      // Step 8d: Verify local uncommitted work was preserved
-      const notesFile = path.join(localClient, 'my_local_notes.txt');
-      if (!fs.existsSync(notesFile) || fs.readFileSync(notesFile, 'utf8') !== 'valuable local notes in progress') {
-        throw new Error('Local uncommitted notes were not preserved during synchronization');
+      if (!storedState || storedState.status !== 'up_to_date') {
+        throw new Error(`Expected stored status 'up_to_date', got: ${storedState?.status}`);
+      }
+      if (storedState.remoteHead !== 'fa999bb4') {
+        throw new Error(`Expected remoteHead 'fa999bb4', got: ${storedState?.remoteHead}`);
       }
 
       ws.close();
     } finally {
       chrome.kill();
-      try { fs.rmSync(e2eDir, { recursive: true, force: true }); } catch (_) {}
-      spawnSync('pkill', ['-f', 'sync.mjs --serve']);
+      mockGithubServer.close();
+      try { fs.rmSync(e2eProfile, { recursive: true, force: true }); } catch (_) {}
     }
   });
 

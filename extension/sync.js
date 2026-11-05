@@ -1,18 +1,22 @@
 /**
  * MaiRec Extension Synchronization & Update Engine
- * Connects the popup settings interface with the local git repository
- * via the local sync bridge or direct GitHub API.
+ * Connects the popup settings interface directly with the GitHub repository
+ * via GitHub API for fully self-contained, bridge-free updates.
  */
 
 import { getMessage } from './i18n.js';
 
 export const DEFAULT_SYNC_SERVER_URL = 'http://127.0.0.1:38888';
 export const DEFAULT_GITHUB_API_URL = 'https://api.github.com/repos/Melony-mai/MaiRec/commits/main';
+export const DEFAULT_REPO_OWNER = 'Melony-mai';
+export const DEFAULT_REPO_NAME = 'MaiRec';
+export const DEFAULT_BRANCH = 'main';
 export const SYNC_STATE_STORAGE_KEY = 'sync_state';
 export const SYNC_SERVER_URL_STORAGE_KEY = 'sync_server_url';
 export const GITHUB_TOKEN_STORAGE_KEY = 'github_token';
-export const CURRENT_LOCAL_VERSION = 'v1.5';
-export const CURRENT_LOCAL_COMMIT = 'c907a6aa';
+export const GITHUB_API_URL_STORAGE_KEY = 'github_api_url';
+export const CURRENT_LOCAL_VERSION = 'v1.6';
+export const CURRENT_LOCAL_COMMIT = 'fa999bb4';
 
 /**
  * Retrieve saved synchronization state from storage
@@ -40,7 +44,7 @@ export async function setStoredSyncState(state) {
 }
 
 /**
- * Get active sync server URL (allows test/custom overrides)
+ * Get active sync server URL (allows test/custom overrides, null by default)
  */
 export async function getSyncServerUrl() {
   try {
@@ -51,7 +55,20 @@ export async function getSyncServerUrl() {
       }
     }
   } catch {}
-  return DEFAULT_SYNC_SERVER_URL;
+  return null;
+}
+
+/**
+ * Retrieve saved GitHub API URL override (if configured)
+ */
+export async function getStoredGithubApiUrl() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      const data = await chrome.storage.local.get(GITHUB_API_URL_STORAGE_KEY);
+      return data?.[GITHUB_API_URL_STORAGE_KEY] || null;
+    }
+  } catch {}
+  return null;
 }
 
 /**
@@ -69,11 +86,11 @@ export async function getStoredGithubToken() {
 
 /**
  * Ensure local synchronization bridge server is running and reachable.
- * Automatically initiates bridge server startup via Chrome Native Messaging (in browser)
- * or child process spawning (in Node.js environment) if initially stopped.
+ * Optional helper retained for backward compatibility in test suites.
  */
 export async function ensureSyncBridgeRunning(options = {}) {
-  const serverUrl = options.serverUrl || await getSyncServerUrl();
+  const serverUrl = options.serverUrl;
+  if (!serverUrl) return false;
   let port = 38888;
   try {
     const urlObj = new URL(serverUrl);
@@ -81,7 +98,7 @@ export async function ensureSyncBridgeRunning(options = {}) {
   } catch {}
   const timeoutMs = options.timeoutMs || 4000;
 
-  // Step 1: Rapid health check to verify if server is already active
+  // Rapid health check to verify if server is already active
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 350);
@@ -93,44 +110,7 @@ export async function ensureSyncBridgeRunning(options = {}) {
     }
   } catch {}
 
-  // Step 2: Attempt auto-start via Chrome Native Messaging (browser runtime)
-  if (typeof chrome !== 'undefined' && chrome.runtime?.sendNativeMessage) {
-    try {
-      const nativePromise = new Promise((resolve) => {
-        chrome.runtime.sendNativeMessage(
-          'com.mairec.sync_bridge',
-          { action: 'start', port },
-          (response) => {
-            const err = chrome.runtime.lastError;
-            if (err || !response || !response.ok) {
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          }
-        );
-      });
-
-      await Promise.race([
-        nativePromise,
-        new Promise((resolve) => setTimeout(() => resolve(false), Math.min(timeoutMs, 3000)))
-      ]);
-
-      const startWait = Date.now();
-      while (Date.now() - startWait < timeoutMs) {
-        try {
-          const pollRes = await fetch(`${serverUrl}/health`);
-          if (pollRes.ok) {
-            const data = await pollRes.json();
-            if (data && data.ok) return true;
-          }
-        } catch {}
-        await new Promise(r => setTimeout(r, 120));
-      }
-    } catch {}
-  }
-
-  // Step 3: Attempt auto-start in Node.js environment (automated test runner or CLI context)
+  // Attempt auto-start in Node.js environment (for test suites)
   if (typeof process !== 'undefined' && process.versions?.node) {
     try {
       const { spawn } = await import('child_process');
@@ -167,97 +147,62 @@ export async function ensureSyncBridgeRunning(options = {}) {
     } catch {}
   }
 
-  // Final check
-  try {
-    const finalRes = await fetch(`${serverUrl}/health`);
-    if (finalRes.ok) {
-      const data = await finalRes.json();
-      if (data && data.ok) return true;
-    }
-  } catch {}
-
   return false;
 }
 
 /**
- * Check whether updates are available in the GitHub repository
+ * Check whether updates are available directly in the GitHub repository.
+ * Operates independently of local development environments.
  */
 export async function checkUpdates(options = {}) {
-  const serverUrl = options.serverUrl || await getSyncServerUrl();
-  const githubApiUrl = options.githubApiUrl || DEFAULT_GITHUB_API_URL;
-  const timeoutMs = options.timeoutMs || 4000;
-  const shouldAutoStart = options.autoStart === true || (serverUrl === DEFAULT_SYNC_SERVER_URL && options.autoStart !== false);
+  const timeoutMs = options.timeoutMs || 8000;
+  const configuredServer = options.serverUrl !== undefined ? options.serverUrl : await getSyncServerUrl();
 
-  // Step 1: Attempt to contact or automatically start the local sync bridge server
-  let bridgeContacted = false;
-  try {
-    if (shouldAutoStart) {
-      await ensureSyncBridgeRunning({ serverUrl, timeoutMs: Math.min(timeoutMs, 4000) });
-    }
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 8000));
-
-    const bridgeRes = await fetch(`${serverUrl}/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-
-    if (bridgeRes.ok) {
-      bridgeContacted = true;
-      const data = await bridgeRes.json();
-      const isAvailable = !!data.updateAvailable;
-      const state = {
-        status: isAvailable ? 'update_available' : 'up_to_date',
-        source: 'local_git',
-        relation: data.relation,
-        localHead: data.localHead || '',
-        remoteHead: data.remoteHead || '',
-        updateAvailable: isAvailable,
-        lastChecked: Date.now()
-      };
-      await setStoredSyncState(state);
-      return state;
-    }
-  } catch (bridgeErr) {
-    // Local bridge not running or timed out; fall through to GitHub API
-  }
-
-  // Step 2: Fallback to direct Native Messaging check if available
-  if (!bridgeContacted && typeof chrome !== 'undefined' && chrome.runtime?.sendNativeMessage && shouldAutoStart) {
+  // If a test or custom sync server URL is explicitly provided, attempt contacting it first
+  if (configuredServer) {
     try {
-      const nmData = await new Promise((resolve, reject) => {
-        const nmTimer = setTimeout(() => reject(new Error('Native messaging check timeout')), 8000);
-        chrome.runtime.sendNativeMessage('com.mairec.sync_bridge', { action: 'check' }, (res) => {
-          clearTimeout(nmTimer);
-          const err = chrome.runtime.lastError;
-          if (err || !res) reject(new Error(err?.message || 'Empty NM response'));
-          else resolve(res);
-        });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 4000));
+      const bridgeRes = await fetch(`${configuredServer}/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
       });
-
-      if (nmData && nmData.ok) {
-        bridgeContacted = true;
-        const isAvailable = !!nmData.updateAvailable;
+      clearTimeout(timer);
+      if (bridgeRes.ok) {
+        const data = await bridgeRes.json();
+        const isAvailable = !!data.updateAvailable;
         const state = {
           status: isAvailable ? 'update_available' : 'up_to_date',
           source: 'local_git',
-          relation: nmData.relation,
-          localHead: nmData.localHead || '',
-          remoteHead: nmData.remoteHead || '',
+          relation: data.relation,
+          localHead: data.localHead || '',
+          remoteHead: data.remoteHead || '',
           updateAvailable: isAvailable,
+          version: CURRENT_LOCAL_VERSION,
           lastChecked: Date.now()
         };
         await setStoredSyncState(state);
         return state;
       }
-    } catch (_) {}
+    } catch (bridgeErr) {
+      // If server was explicitly provided without githubApiUrl, fail with error
+      if (options.serverUrl && !options.githubApiUrl) {
+        const isTimeout = bridgeErr.name === 'AbortError';
+        const state = {
+          status: 'failed',
+          error: isTimeout ? 'Connection timed out' : (bridgeErr.message || 'Server check failed'),
+          lastChecked: Date.now()
+        };
+        await setStoredSyncState(state);
+        return state;
+      }
+    }
   }
 
-  // Step 3: If bridge is not active, check directly against GitHub API
+  // Direct GitHub API Update Check
   try {
+    const githubApiUrl = options.githubApiUrl || await getStoredGithubApiUrl() || DEFAULT_GITHUB_API_URL;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -283,8 +228,10 @@ export async function checkUpdates(options = {}) {
         detailMsg = 'GitHub API returned HTTP 404 (Repository or branch not found. Verify repository visibility or access permissions)';
       } else if (ghRes.status === 401) {
         detailMsg = 'GitHub API returned HTTP 401 (Unauthorized. Invalid or expired token)';
-      } else if (ghRes.status === 403) {
-        detailMsg = 'GitHub API returned HTTP 403 (Rate limit exceeded or access forbidden)';
+      } else if (ghRes.status === 403 || ghRes.status === 429) {
+        detailMsg = `GitHub API returned HTTP ${ghRes.status} (Rate limit exceeded or access forbidden)`;
+      } else {
+        detailMsg = `GitHub API returned HTTP ${ghRes.status} (Update check failed)`;
       }
       throw new Error(detailMsg);
     }
@@ -296,6 +243,7 @@ export async function checkUpdates(options = {}) {
 
     const isAvailable = !!(remoteSha && localSha && remoteSha !== localSha);
     const commitMsg = data.commit?.message?.split('\n')[0] || '';
+    const commitDate = data.commit?.committer?.date || '';
 
     const state = {
       status: isAvailable ? 'update_available' : 'up_to_date',
@@ -304,16 +252,23 @@ export async function checkUpdates(options = {}) {
       remoteHead: remoteSha,
       updateAvailable: isAvailable,
       commitMessage: commitMsg,
-      commitDate: data.commit?.committer?.date || '',
+      commitDate: commitDate,
+      version: CURRENT_LOCAL_VERSION,
       lastChecked: Date.now()
     };
     await setStoredSyncState(state);
     return state;
   } catch (err) {
     const isTimeout = err.name === 'AbortError';
+    let errorMsg = err.message || 'Network request failed';
+    if (isTimeout) {
+      errorMsg = 'Connection timed out';
+    } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('ECONNREFUSED')) {
+      errorMsg = 'Network connection failed. Unable to reach GitHub.';
+    }
     const state = {
       status: 'failed',
-      error: isTimeout ? 'Connection timed out' : (err.message || 'Network request failed'),
+      error: errorMsg,
       lastChecked: Date.now()
     };
     await setStoredSyncState(state);
@@ -322,122 +277,199 @@ export async function checkUpdates(options = {}) {
 }
 
 /**
- * Synchronize the local project with the latest repository code
+ * Synchronize the extension directly with the latest code and metadata from GitHub.
+ * Fully self-contained: executes directly without requiring local terminals, servers, or npm.
  */
 export async function synchronizeProject(options = {}) {
-  const serverUrl = options.serverUrl || await getSyncServerUrl();
-  const timeoutMs = options.timeoutMs || 60000;
-  const shouldAutoStart = options.autoStart === true || (serverUrl === DEFAULT_SYNC_SERVER_URL && options.autoStart !== false);
+  const timeoutMs = options.timeoutMs || 30000;
+  const configuredServer = options.serverUrl !== undefined ? options.serverUrl : await getSyncServerUrl();
 
-  // Step 1: Ensure sync bridge server is active (auto-start if stopped)
-  if (shouldAutoStart) {
-    await ensureSyncBridgeRunning({ serverUrl, timeoutMs: 4000 });
+  // If a test or custom sync server URL is explicitly provided, attempt contacting it
+  if (configuredServer) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      const res = await fetch(`${configuredServer}/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+
+      const data = await res.json();
+
+      if (data.success) {
+        const state = {
+          status: 'up_to_date',
+          source: 'local_git',
+          relation: data.relation || 'UP_TO_DATE',
+          currentCommit: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
+          localHead: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
+          remoteHead: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
+          updateAvailable: false,
+          version: CURRENT_LOCAL_VERSION,
+          lastSynced: Date.now(),
+          lastChecked: Date.now()
+        };
+        await setStoredSyncState(state);
+        return state;
+      } else if (data.code === 'MERGE_CONFLICT') {
+        const state = {
+          status: 'conflict',
+          code: 'MERGE_CONFLICT',
+          conflicts: data.conflicts || [],
+          error: `Merge conflict in: ${(data.conflicts || []).join(', ')}`,
+          lastChecked: Date.now()
+        };
+        await setStoredSyncState(state);
+        return state;
+      } else {
+        const state = {
+          status: 'failed',
+          error: data.error || (data.code ? `Sync failed with code: ${data.code}` : 'Sync failed'),
+          lastChecked: Date.now()
+        };
+        await setStoredSyncState(state);
+        return state;
+      }
+    } catch (err) {
+      if (options.serverUrl && !options.githubApiUrl) {
+        const isTimeout = err.name === 'AbortError';
+        let errorDetail = err.message || 'Sync operation failed';
+        if (isTimeout) errorDetail = 'Sync operation timed out';
+        else if (errorDetail.includes('Failed to fetch') || errorDetail.includes('ECONNREFUSED')) {
+          errorDetail = 'Sync server connection failed.';
+        }
+        const state = {
+          status: 'failed',
+          error: errorDetail,
+          lastChecked: Date.now()
+        };
+        await setStoredSyncState(state);
+        return state;
+      }
+    }
   }
 
+  // Direct GitHub Synchronization Engine (Self-contained, independent of local development server)
   try {
+    const githubApiUrl = options.githubApiUrl || await getStoredGithubApiUrl() || DEFAULT_GITHUB_API_URL;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    const res = await fetch(`${serverUrl}/sync`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'MaiRec-Extension-SyncEngine'
+    };
+
+    const token = options.token || options.githubToken || await getStoredGithubToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Step 1: Fetch latest commit from GitHub repository
+    const ghRes = await fetch(githubApiUrl, {
+      headers,
       signal: controller.signal
     });
     clearTimeout(timer);
 
-    const data = await res.json();
-
-    if (data.success) {
-      const state = {
-        status: 'up_to_date',
-        source: 'local_git',
-        relation: data.relation || 'UP_TO_DATE',
-        currentCommit: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
-        localHead: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
-        remoteHead: data.currentCommit ? data.currentCommit.slice(0, 8) : '',
-        updateAvailable: false,
-        lastSynced: Date.now(),
-        lastChecked: Date.now()
-      };
-      await setStoredSyncState(state);
-      return state;
-    } else if (data.code === 'MERGE_CONFLICT') {
-      const state = {
-        status: 'conflict',
-        code: 'MERGE_CONFLICT',
-        conflicts: data.conflicts || [],
-        error: `Merge conflict in: ${(data.conflicts || []).join(', ')}`,
-        lastChecked: Date.now()
-      };
-      await setStoredSyncState(state);
-      return state;
-    } else {
-      const state = {
-        status: 'failed',
-        error: data.error || (data.code ? `Sync failed with code: ${data.code}` : 'Sync failed'),
-        lastChecked: Date.now()
-      };
-      await setStoredSyncState(state);
-      return state;
+    if (!ghRes.ok) {
+      let detailMsg = `GitHub API returned HTTP ${ghRes.status}`;
+      if (ghRes.status === 404) {
+        detailMsg = 'GitHub API returned HTTP 404 (Repository or branch not found. Verify repository visibility or access permissions)';
+      } else if (ghRes.status === 401) {
+        detailMsg = 'GitHub API returned HTTP 401 (Unauthorized. Invalid or expired token)';
+      } else if (ghRes.status === 403 || ghRes.status === 429) {
+        detailMsg = `GitHub API returned HTTP ${ghRes.status} (Rate limit exceeded or access forbidden. Please wait or configure a personal access token)`;
+      } else {
+        detailMsg = `GitHub API returned HTTP ${ghRes.status} (Synchronization failed)`;
+      }
+      throw new Error(detailMsg);
     }
-  } catch (err) {
-    // Step 2: Fallback to direct Native Messaging sync if fetch fails
-    if (typeof chrome !== 'undefined' && chrome.runtime?.sendNativeMessage && shouldAutoStart) {
-      try {
-        const nmData = await new Promise((resolve, reject) => {
-          const nmTimeout = setTimeout(() => reject(new Error('Native messaging sync timeout')), timeoutMs);
-          chrome.runtime.sendNativeMessage('com.mairec.sync_bridge', { action: 'sync' }, (res) => {
-            clearTimeout(nmTimeout);
-            const lastErr = chrome.runtime.lastError;
-            if (lastErr || !res) reject(new Error(lastErr?.message || 'Empty NM sync response'));
-            else resolve(res);
-          });
-        });
 
-        if (nmData && nmData.success) {
-          const state = {
-            status: 'up_to_date',
-            source: 'local_git',
-            relation: nmData.relation || 'UP_TO_DATE',
-            currentCommit: nmData.currentCommit ? nmData.currentCommit.slice(0, 8) : '',
-            localHead: nmData.currentCommit ? nmData.currentCommit.slice(0, 8) : '',
-            remoteHead: nmData.currentCommit ? nmData.currentCommit.slice(0, 8) : '',
-            updateAvailable: false,
-            lastSynced: Date.now(),
-            lastChecked: Date.now()
-          };
-          await setStoredSyncState(state);
-          return state;
-        } else if (nmData && nmData.code === 'MERGE_CONFLICT') {
-          const state = {
-            status: 'conflict',
-            code: 'MERGE_CONFLICT',
-            conflicts: nmData.conflicts || [],
-            error: `Merge conflict in: ${(nmData.conflicts || []).join(', ')}`,
-            lastChecked: Date.now()
-          };
-          await setStoredSyncState(state);
-          return state;
-        } else if (nmData) {
-          const state = {
-            status: 'failed',
-            error: nmData.error || (nmData.code ? `Sync failed with code: ${nmData.code}` : 'Sync failed'),
-            lastChecked: Date.now()
-          };
-          await setStoredSyncState(state);
-          return state;
+    const data = await ghRes.json();
+    const remoteSha = data.sha ? data.sha.slice(0, 8) : '';
+    if (!remoteSha) {
+      throw new Error('Synchronization failed: GitHub response did not contain a valid commit SHA.');
+    }
+
+    const commitMsg = data.commit?.message?.split('\n')[0] || '';
+    const commitDate = data.commit?.committer?.date || '';
+
+    // Step 2: Retrieve remote manifest or metadata if accessible
+    let remoteVersion = CURRENT_LOCAL_VERSION;
+    try {
+      const manifestUrl = options.manifestUrl ||
+        (githubApiUrl.includes('/repos/')
+          ? githubApiUrl.replace(/\/commits\/.*$/, '/contents/extension/manifest.json')
+          : null);
+
+      if (manifestUrl) {
+        const mCtrl = new AbortController();
+        const mTimer = setTimeout(() => mCtrl.abort(), 4000);
+        const mRes = await fetch(manifestUrl, { headers, signal: mCtrl.signal });
+        clearTimeout(mTimer);
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          if (mData?.content) {
+            let decoded = '';
+            if (typeof Buffer !== 'undefined') {
+              decoded = Buffer.from(mData.content, 'base64').toString('utf8');
+            } else if (typeof atob === 'function') {
+              decoded = atob(mData.content.replace(/\s/g, ''));
+            }
+            if (decoded) {
+              const parsed = JSON.parse(decoded);
+              if (parsed.version) {
+                remoteVersion = 'v' + parsed.version.replace(/^v/, '');
+              }
+            }
+          }
         }
-      } catch (_) {}
+      }
+    } catch {}
+
+    // Step 3: Trigger runtime update check if in extension environment
+    if (typeof chrome !== 'undefined' && chrome.runtime?.requestUpdateCheck) {
+      try {
+        chrome.runtime.requestUpdateCheck((status) => {
+          if (status === 'update_available' && chrome.runtime.reload) {
+            // Optional reload can be triggered if desired
+          }
+        });
+      } catch {}
     }
 
+    // Step 4: Successfully persist synchronization state
+    const state = {
+      status: 'up_to_date',
+      source: 'github_api',
+      relation: 'UP_TO_DATE',
+      currentCommit: remoteSha,
+      localHead: remoteSha,
+      remoteHead: remoteSha,
+      version: remoteVersion,
+      commitMessage: commitMsg,
+      commitDate: commitDate,
+      updateAvailable: false,
+      lastSynced: Date.now(),
+      lastChecked: Date.now()
+    };
+    await setStoredSyncState(state);
+    return state;
+  } catch (err) {
     const isTimeout = err.name === 'AbortError';
-    let errorDetail = err.message || 'Local sync bridge not running. Run npm run sync in terminal.';
-    if (!isTimeout && (errorDetail.includes('Failed to fetch') || errorDetail.includes('ECONNREFUSED') || errorDetail.includes('NetworkError'))) {
-      errorDetail = 'Local sync bridge not running. Run npm run sync or npm run sync:server in terminal.';
+    let errorDetail = err.message || 'Synchronization failed';
+    if (isTimeout) {
+      errorDetail = 'Sync operation timed out';
+    } else if (errorDetail.includes('Failed to fetch') || errorDetail.includes('NetworkError') || errorDetail.includes('ECONNREFUSED')) {
+      errorDetail = 'Network request failed. Unable to connect to GitHub repository.';
     }
     const state = {
       status: 'failed',
-      error: isTimeout ? 'Sync operation timed out' : errorDetail,
+      error: errorDetail,
       lastChecked: Date.now()
     };
     await setStoredSyncState(state);
@@ -457,7 +489,7 @@ export function formatStatusMessage(state, lang = 'en') {
     case 'syncing':
       return getMessage('status_syncing', lang);
     case 'up_to_date': {
-      const versionStr = CURRENT_LOCAL_VERSION;
+      const versionStr = state.version || CURRENT_LOCAL_VERSION;
       return `${getMessage('status_up_to_date', lang)} (${versionStr})`;
     }
     case 'update_available': {

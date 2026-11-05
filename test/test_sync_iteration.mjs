@@ -1,6 +1,7 @@
 import { spawnSync, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import {
   runGit,
@@ -61,7 +62,7 @@ async function main() {
   });
 
   // Create isolated sandbox for Git synchronization simulation
-  const testSandboxDir = path.join('/tmp', `mairec-sync-test-${Date.now()}`);
+  const testSandboxDir = path.join(os.tmpdir(), `mairec-sync-test-${Date.now()}`);
   fs.mkdirSync(testSandboxDir, { recursive: true });
 
   try {

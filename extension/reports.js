@@ -28,9 +28,11 @@ import { getStoredTheme, applyTheme, setStoredTheme, updateThemeButton, normaliz
   });
 
   initSystemThemeListener(() => {
-    if (currentTheme === 'system') {
-      applyTheme(currentTheme);
-      updateThemeButton(themeBtn, currentTheme, currentLang);
+    const isSys = currentTheme === 'system' ||
+      (typeof document !== 'undefined' && document.documentElement?.getAttribute('data-theme-preference') === 'system');
+    if (isSys) {
+      applyTheme('system');
+      updateThemeButton(themeBtn, 'system', currentLang);
     }
   });
 

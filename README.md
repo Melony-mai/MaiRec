@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/version-v1.5-informational?logo=semantic-release&logoColor=white" alt="Version v1.5" /></a>
+  <a href="#features"><img src="https://img.shields.io/badge/version-v1.6-informational?logo=semantic-release&logoColor=white" alt="Version v1.6" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Chrome-116%2B-blue?logo=googlechrome&logoColor=white" alt="Chrome 116+" /></a>
   <a href="#features"><img src="https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome&logoColor=white" alt="Manifest V3" /></a>
   <a href="#technical-architecture"><img src="https://img.shields.io/badge/Inference-ONNX%20WebAssembly-orange?logo=webassembly&logoColor=white" alt="ONNX Runtime Web" /></a>
@@ -475,7 +475,7 @@ npm run sync:server
 ```
 
 **Key Safety Guarantees & UI Features:**
-- **In-Popup One-Click Update & Status**: Click the "Check for Updates" button next to the version badge in the popup header to check GitHub in real time. When updates are available, the button highlights as "Update Now" to synchronize directly, displaying clear status indicators (`Up to date`, `Checking...`, `Update available`, or `Update failed`). The local synchronization bridge service starts automatically on demand without requiring manual terminal commands.
+- **In-Popup One-Click Update & Status**: Click the "Check for Updates" button next to the version badge in the popup header to check GitHub in real time. The extension connects directly to the GitHub repository in a fully self-contained manner on any machine without requiring a local development server, background bridge, or terminal commands. When updates are available, the button highlights as "Update Now" to synchronize directly, displaying clear status indicators (`Up to date`, `Checking...`, `Update available`, or `Update failed`).
 - **Zero Work Loss**: Uncommitted modifications, staged files, and untracked files are automatically detected and safely preserved in Git stash before any remote changes are integrated.
 - **Direct Remote Iteration**: Automatically fetches and merges latest upstream commits directly into your local working branch.
 - **Safe Merge Conflict Handling**: If conflicts occur between incoming remote changes and local edits, MaiRec halts safely without clobbering files, preserves all work, and clearly reports conflicted files with actionable guidance.

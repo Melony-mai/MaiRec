@@ -97,9 +97,11 @@ async function initTheme() {
     });
   }
   initSystemThemeListener(() => {
-    if (currentTheme === 'system') {
-      applyTheme(currentTheme);
-      updateThemeButton($('theme_toggle_btn'), currentTheme, currentLang);
+    const isSys = currentTheme === 'system' ||
+      (typeof document !== 'undefined' && document.documentElement?.getAttribute('data-theme-preference') === 'system');
+    if (isSys) {
+      applyTheme('system');
+      updateThemeButton($('theme_toggle_btn'), 'system', currentLang);
     }
   });
 }

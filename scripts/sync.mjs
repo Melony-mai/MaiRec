@@ -884,7 +884,7 @@ export async function runNativeMessagingHost(options = {}) {
             const nodeDir = path.dirname(process.execPath);
             const childEnv = {
               ...process.env,
-              PATH: nodeDir ? `${nodeDir}:${process.env.PATH || ''}` : process.env.PATH
+              PATH: nodeDir ? `${nodeDir}${path.delimiter}${process.env.PATH || ''}` : process.env.PATH
             };
             const child = spawn(process.execPath, [syncScript, '--serve', '--port', String(targetPort), '--cwd', cwd], {
               cwd,
@@ -896,9 +896,10 @@ export async function runNativeMessagingHost(options = {}) {
             child.unref();
 
             let ready = false;
-            for (let i = 0; i < 20; i++) {
-              await new Promise(r => setTimeout(r, 100));
-              if (await checkServerHealth(serverUrl, 200)) {
+            const startWait = Date.now();
+            while (Date.now() - startWait < 6000) {
+              await new Promise(r => setTimeout(r, 150));
+              if (await checkServerHealth(serverUrl, 1000)) {
                 ready = true;
                 break;
               }

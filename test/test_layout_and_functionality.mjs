@@ -189,34 +189,34 @@ for (const f of essentialFiles) {
 }
 console.log(`  ✓ All ${essentialFiles.length} core dependencies and model files are intact.`);
 
-// 7. Verify version v1.5 consistency across all files
-console.log('\n[7] Verifying version v1.5 consistency:');
+// 7. Verify version v1.6 consistency across all files
+console.log('\n[7] Verifying version v1.6 consistency:');
 const extManifest = JSON.parse(fs.readFileSync('extension/manifest.json', 'utf8'));
 const wsManifest = JSON.parse(fs.readFileSync('ws-addon/manifest.json', 'utf8'));
 const readmeEn = fs.readFileSync('README.md', 'utf8');
 const readmeJa = fs.readFileSync('README_ja.md', 'utf8');
 const readmeZh = fs.readFileSync('README_zh-CN.md', 'utf8');
 
-if (extManifest.version !== '1.5' || extManifest.version_name !== '1.5') {
+if (extManifest.version !== '1.6' || extManifest.version_name !== '1.6') {
   throw new Error(`extension/manifest.json version mismatch: ${extManifest.version} / ${extManifest.version_name}`);
 }
-console.log('  ✓ extension/manifest.json is v1.5');
+console.log('  ✓ extension/manifest.json is v1.6');
 
-if (wsManifest.version !== '1.5' || wsManifest.version_name !== '1.5') {
+if (wsManifest.version !== '1.6' || wsManifest.version_name !== '1.6') {
   throw new Error(`ws-addon/manifest.json version mismatch: ${wsManifest.version} / ${wsManifest.version_name}`);
 }
-console.log('  ✓ ws-addon/manifest.json is v1.5');
+console.log('  ✓ ws-addon/manifest.json is v1.6');
 
-if (!html.includes('<span class="badge">v1.5</span>')) {
-  throw new Error('popup.html missing badge v1.5');
+if (!html.includes('<span class="badge">v1.6</span>')) {
+  throw new Error('popup.html missing badge v1.6');
 }
-console.log('  ✓ popup.html badge is v1.5');
+console.log('  ✓ popup.html badge is v1.6');
 
 for (const [name, doc] of [['README.md', readmeEn], ['README_ja.md', readmeJa], ['README_zh-CN.md', readmeZh]]) {
-  if (!doc.includes('v1.5')) {
-    throw new Error(`${name} missing version v1.5 badge`);
+  if (!doc.includes('v1.6')) {
+    throw new Error(`${name} missing version v1.6 badge`);
   }
 }
-console.log('  ✓ Documentation files (en, ja, zh-CN) have consistent v1.5 badges.');
+console.log('  ✓ Documentation files (en, ja, zh-CN) have consistent v1.6 badges.');
 
 console.log('\n=== ALL LAYOUT AND FUNCTIONALITY TESTS PASSED! ===\n');

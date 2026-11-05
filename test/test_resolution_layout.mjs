@@ -1,8 +1,30 @@
 import { spawn } from 'child_process';
 import { readFileSync, rmSync, existsSync } from 'fs';
 import path from 'path';
+import os from 'os';
 
-const CHROME_PATH = '/home/mai/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome';
+function getChromePath() {
+  if (process.env.CHROME_BIN && existsSync(process.env.CHROME_BIN)) {
+    return process.env.CHROME_BIN;
+  }
+  if (process.platform === 'win32') {
+    const winPaths = [
+      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+      'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+    for (const p of winPaths) {
+      if (existsSync(p)) return p;
+    }
+  } else if (process.platform === 'darwin') {
+    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (existsSync(macPath)) return macPath;
+  }
+  return '/home/mai/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome';
+}
+
+const CHROME_PATH = getChromePath();
 const EXT_PATH = path.resolve('extension');
 
 console.log('--- Multi-Resolution Popup Layout & Spacing Test Suite ---\n');
@@ -15,7 +37,7 @@ const resolutions = [
   { name: 'HiDPI / 4K Display (300% scale)', dpr: 3.0, width: 368, height: 600 },
 ];
 
-const testProfile = '/tmp/test-profile-res-' + Date.now();
+const testProfile = path.join(os.tmpdir(), 'test-profile-res-' + Date.now());
 
 async function runLayoutTests() {
   const chrome = spawn(CHROME_PATH, [
@@ -39,9 +61,15 @@ async function runLayoutTests() {
       }
     }
 
-    const list = await (await fetch('http://127.0.0.1:9240/json/list')).json();
-    // Find the loaded extension ID
-    const sw = list.find(t => t.url.includes('background.js'));
+    let sw = null;
+    for (let i = 0; i < 50; i++) {
+      try {
+        const list = await (await fetch('http://127.0.0.1:9240/json/list')).json();
+        sw = list.find(t => t.url && t.url.includes('background.js'));
+        if (sw) break;
+      } catch {}
+      await new Promise(r => setTimeout(r, 100));
+    }
     if (!sw) {
       throw new Error('Extension background service worker not found');
     }
@@ -116,8 +144,8 @@ async function runLayoutTests() {
         returnByValue: true
       })).result.value;
 
-      if (metrics.badgeText !== 'v1.5') {
-        throw new Error(`Badge text expected 'v1.5', got '${metrics.badgeText}'`);
+      if (metrics.badgeText !== 'v1.6') {
+        throw new Error(`Badge text expected 'v1.6', got '${metrics.badgeText}'`);
       }
       if (metrics.headerToSolverSection < 16) {
         throw new Error(`Spacing too small between header and solver section: ${metrics.headerToSolverSection}px`);
